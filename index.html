@@ -2,12 +2,13 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#4B0E18">
 <title>DMB Work Tracker</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-/* Layout idea: royal Jaipur mithai-box header (maroon + gold jali), ivory working surface, tab per work-area, bottom nav on phone. Single theme by choice. */
+/* Layout idea: royal Jaipur mithai-box header (maroon + gold jali), ivory working surface, one tab per work area, bottom nav on phone. Single theme by choice. */
 :root{
   --maroon:#7A1C2B; --maroon-d:#4B0E18; --gold:#C9A24B; --gold-l:#F4E6BF;
   --saffron:#D9731A; --ivory:#FAF5EC; --card:#FFFFFF; --ink:#2B1A17; --muted:#7D6A61; --line:#ECDFCC;
@@ -23,19 +24,22 @@ button{cursor:pointer}
 :focus-visible{outline:2px solid var(--saffron);outline-offset:2px}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 
-.hero{position:relative;background:linear-gradient(135deg,var(--maroon-d),var(--maroon) 60%,#8E2A33);color:#fff;padding:18px 16px 54px;overflow:hidden}
+.hero{position:relative;background:linear-gradient(135deg,var(--maroon-d),var(--maroon) 60%,#8E2A33);color:#fff;padding:calc(16px + env(safe-area-inset-top)) 16px 54px;overflow:hidden}
 .hero::before{content:"";position:absolute;inset:0;opacity:.13;
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='44' height='44' viewBox='0 0 44 44'%3E%3Cg fill='none' stroke='%23F4E6BF' stroke-width='1.2'%3E%3Ccircle cx='22' cy='11' r='11'/%3E%3Ccircle cx='22' cy='33' r='11'/%3E%3Ccircle cx='11' cy='22' r='11'/%3E%3Ccircle cx='33' cy='22' r='11'/%3E%3C/g%3E%3C/svg%3E")}
-.hero::after{content:"";position:absolute;left:0;right:0;bottom:0;height:10px;
-  background:repeating-linear-gradient(90deg,var(--gold) 0 14px,transparent 14px 20px);opacity:.55}
-.hero-in{position:relative;max-width:1100px;margin:0 auto;display:flex;align-items:center;gap:14px}
-.mono{flex:none;width:54px;height:54px;border-radius:50%;display:grid;place-items:center;
+.hero::after{content:"";position:absolute;left:0;right:0;bottom:0;height:10px;background:repeating-linear-gradient(90deg,var(--gold) 0 14px,transparent 14px 20px);opacity:.55}
+.hero-in{position:relative;max-width:1100px;margin:0 auto;display:flex;align-items:center;gap:12px}
+.mono{flex:none;width:52px;height:52px;border-radius:50%;display:grid;place-items:center;
   background:radial-gradient(circle at 35% 30%,#F7E7B8,var(--gold) 60%,#9C7A2E);color:var(--maroon-d);
-  font-family:var(--f-display);font-weight:700;font-size:20px;letter-spacing:.5px;box-shadow:0 0 0 3px rgba(244,230,191,.35)}
+  font-family:var(--f-display);font-weight:700;font-size:19px;letter-spacing:.5px;box-shadow:0 0 0 3px rgba(244,230,191,.35)}
 .hero h1{margin:0;font-family:var(--f-display);font-size:30px;font-weight:700;line-height:1;letter-spacing:.3px}
 .hero .sub{margin-top:4px;color:var(--gold-l);font-size:12.5px;letter-spacing:.4px}
-.hero .date{margin-left:auto;text-align:right;font-size:12px;color:var(--gold-l)}
-.hero .date b{display:block;font-size:15px;color:#fff}
+.hero .right{margin-left:auto;display:flex;flex-direction:column;align-items:flex-end;gap:6px;text-align:right}
+.gear{border:1px solid rgba(244,230,191,.4);background:rgba(255,255,255,.08);color:#fff;border-radius:10px;padding:6px 10px;display:flex;align-items:center;gap:6px;font-size:12.5px;font-weight:700;text-decoration:none}
+.gear svg{width:16px;height:16px}
+.gear.on{background:var(--gold);color:var(--maroon-d)}
+.who{font-size:12px;color:var(--gold-l)}
+.who b{color:#fff}
 .live{display:inline-flex;align-items:center;gap:6px;font-size:11px;margin-top:4px}
 .live i{width:7px;height:7px;border-radius:50%;background:#9be3b4;box-shadow:0 0 0 3px rgba(155,227,180,.25)}
 .live.off i{background:#f5c16c;box-shadow:0 0 0 3px rgba(245,193,108,.25)}
@@ -46,12 +50,12 @@ button{cursor:pointer}
 .tabs a svg{width:16px;height:16px}
 .tabs a.on{background:var(--ivory);color:var(--maroon)}
 main{max-width:1100px;margin:0 auto;padding:18px 16px 110px}
-
 .bnav{display:none}
 @media (max-width:720px){
   .tabs{display:none}
   .hero{padding-bottom:22px}
-  .hero h1{font-size:25px}
+  .hero h1{font-size:24px}
+  .hero .sub{font-size:11.5px}
   main{padding-top:16px}
   .bnav{display:grid;grid-template-columns:repeat(6,1fr);position:fixed;left:0;right:0;bottom:0;z-index:20;background:#fff;border-top:1px solid var(--line);padding:6px 4px calc(6px + env(safe-area-inset-bottom));box-shadow:0 -6px 18px rgba(75,14,24,.06)}
   .bnav a{display:flex;flex-direction:column;align-items:center;gap:2px;text-decoration:none;color:var(--muted);font-size:10.5px;font-weight:600;padding:4px 0;border-radius:10px}
@@ -62,39 +66,37 @@ main{max-width:1100px;margin:0 auto;padding:18px 16px 110px}
 h2.sec{font-family:var(--f-display);font-size:26px;margin:0;color:var(--maroon-d);text-wrap:balance;line-height:1.1}
 @media (max-width:720px){.bar h2.sec{flex-basis:100%}}
 .bar{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-bottom:14px}
-.bar .grow{flex:1}
+.bar .grow,.grow{flex:1}
 .muted{color:var(--muted)}
 .small{font-size:12.5px}
 .grid{display:grid;gap:12px}
-.g2{grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
+.g2{grid-template-columns:repeat(auto-fit,minmax(270px,1fr))}
 .g4{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
 .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px}
-.card h3{margin:0 0 8px;font-size:14px;letter-spacing:.3px;text-transform:uppercase;color:var(--maroon)}
+.card h3{margin:0 0 8px;font-size:13.5px;letter-spacing:.4px;text-transform:uppercase;color:var(--maroon)}
 .panel-title{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px}
 .panel-title h3{margin:0}
 
-.stat{position:relative;overflow:hidden}
+.stat{position:relative;overflow:hidden;text-decoration:none;color:inherit}
 .stat .n{font-size:28px;font-weight:800;font-variant-numeric:tabular-nums;color:var(--maroon-d);line-height:1.1}
 .stat .l{font-size:12.5px;color:var(--muted);font-weight:600}
 .stat .s{font-size:12px;margin-top:4px}
 .stat::after{content:"";position:absolute;right:-22px;bottom:-22px;width:56px;height:56px;border-radius:50%;border:7px solid var(--gold-l);opacity:.7}
-a.stat{text-decoration:none;color:inherit}
 
 .chip{display:inline-flex;align-items:center;gap:4px;padding:2px 9px;border-radius:999px;font-size:11.5px;font-weight:700;white-space:nowrap;background:#F1EAE0;color:var(--muted)}
-.c-ok{background:var(--ok-bg);color:var(--ok)}
-.c-warn{background:var(--warn-bg);color:var(--warn)}
-.c-bad{background:var(--bad-bg);color:var(--bad)}
-.c-info{background:var(--info-bg);color:var(--info)}
+.c-ok{background:var(--ok-bg);color:var(--ok)} .c-warn{background:var(--warn-bg);color:var(--warn)}
+.c-bad{background:var(--bad-bg);color:var(--bad)} .c-info{background:var(--info-bg);color:var(--info)}
 .c-gold{background:var(--gold-l);color:#7A5A12}
 
-.btn{border:0;border-radius:10px;padding:9px 14px;font-weight:700;font-size:13.5px;background:var(--maroon);color:#fff;display:inline-flex;align-items:center;gap:6px}
+.btn{border:0;border-radius:10px;padding:9px 14px;font-weight:700;font-size:13.5px;background:var(--maroon);color:#fff;display:inline-flex;align-items:center;gap:6px;text-decoration:none}
 .btn:hover{background:var(--maroon-d)}
-.btn.ghost{background:transparent;color:var(--maroon);border:1px solid var(--line)}
+.btn.ghost{background:#fff;color:var(--maroon);border:1px solid var(--line)}
 .btn.ghost:hover{background:var(--gold-l)}
 .btn.sm{padding:6px 10px;font-size:12.5px;border-radius:8px}
 .btn.gold{background:var(--gold);color:var(--maroon-d)}
-.btn.danger{background:transparent;color:var(--bad);border:1px solid var(--bad-bg)}
+.btn.danger{background:#fff;color:var(--bad);border:1px solid var(--bad-bg)}
 .btn:disabled{opacity:.5;cursor:not-allowed}
+.btn svg{width:15px;height:15px}
 
 .field{display:flex;flex-direction:column;gap:4px}
 .field label{font-size:12px;font-weight:700;color:var(--muted);letter-spacing:.2px}
@@ -103,7 +105,7 @@ textarea.inp{min-height:76px;resize:vertical}
 .inp:focus{outline:2px solid var(--gold);outline-offset:0;border-color:var(--gold)}
 .mini{width:auto;min-height:36px;padding:6px 10px}
 
-.seg{display:inline-flex;background:#fff;border:1px solid var(--line);border-radius:10px;padding:3px;gap:2px}
+.seg{display:inline-flex;background:#fff;border:1px solid var(--line);border-radius:10px;padding:3px;gap:2px;flex-wrap:wrap}
 .seg button{border:0;background:transparent;padding:6px 12px;border-radius:8px;font-weight:700;font-size:12.5px;color:var(--muted)}
 .seg button.on{background:var(--maroon);color:#fff}
 .chips{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none}
@@ -112,8 +114,20 @@ textarea.inp{min-height:76px;resize:vertical}
 .chips button.on{background:var(--gold-l);border-color:var(--gold);color:var(--maroon-d)}
 .chips button .ct{margin-left:5px;font-size:11px;color:var(--muted)}
 
-.vcard{border-top:4px solid var(--gold);cursor:pointer;transition:transform .12s}
-.vcard:hover{transform:translateY(-2px)}
+/* FY month strip */
+.fyrow{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px}
+.fyrow b{font-size:13px;color:var(--maroon)}
+.mstrip{display:flex;gap:6px;overflow-x:auto;padding:2px 0 8px;margin-bottom:10px;scrollbar-width:thin}
+.mchip{flex:none;position:relative;min-width:62px;border:1px solid var(--line);background:#fff;border-radius:12px;padding:7px 8px 9px;display:flex;flex-direction:column;align-items:center;gap:1px;overflow:hidden}
+.mchip b{font-size:13px}
+.mchip span{font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums}
+.mchip em{position:absolute;left:0;bottom:0;height:3px;background:var(--ok)}
+.mchip .dot{position:absolute;top:6px;right:6px;width:7px;height:7px;border-radius:50%;background:var(--bad)}
+.mchip.on{background:var(--maroon);border-color:var(--maroon);color:#fff}
+.mchip.on span{color:var(--gold-l)}
+.mchip.now:not(.on){border-color:var(--gold);box-shadow:inset 0 0 0 1px var(--gold)}
+
+.vcard{border-top:4px solid var(--gold)}
 .vhead{display:flex;align-items:center;gap:10px;margin-bottom:10px}
 .vicon{width:38px;height:38px;border-radius:10px;display:grid;place-items:center;background:var(--gold-l);color:var(--maroon)}
 .vicon svg{width:20px;height:20px}
@@ -123,6 +137,14 @@ textarea.inp{min-height:76px;resize:vertical}
 .kv{display:flex;justify-content:space-between;gap:8px;font-size:12.5px;padding:3px 0}
 .kv span:first-child{color:var(--muted)}
 .kv b{font-variant-numeric:tabular-nums;text-align:right}
+.outs{display:grid;grid-template-columns:repeat(2,1fr);gap:6px;margin:8px 0}
+.ob{border:1px solid var(--line);border-radius:10px;padding:7px 9px;background:#fff;text-align:left;display:flex;flex-direction:column;gap:1px}
+.ob b{font-size:13px}
+.ob span{font-size:11px;font-weight:700}
+.ob.s0 span{color:var(--warn)}
+.ob.s1{background:var(--info-bg);border-color:#C5DAEE} .ob.s1 span{color:var(--info)}
+.ob.s2{background:var(--ok-bg);border-color:#BFE0CB} .ob.s2 span{color:var(--ok)}
+.vfoot{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
 
 .list{display:flex;flex-direction:column;gap:8px}
 .item{background:#fff;border:1px solid var(--line);border-radius:12px;padding:11px 12px;display:flex;gap:10px;align-items:flex-start}
@@ -140,19 +162,28 @@ textarea.inp{min-height:76px;resize:vertical}
 .chk.on{background:var(--ok);border-color:var(--ok);color:#fff}
 .chk svg{width:14px;height:14px}
 .empty{padding:20px;text-align:center;color:var(--muted);border:1.5px dashed var(--line);border-radius:12px;font-size:13.5px;background:#fffdf8}
+.edited{font-size:11px;color:var(--muted)}
 
-.ent{margin-bottom:16px}
 .ent-h{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px}
 .ent-h b{font-size:15.5px;color:var(--maroon-d)}
 .gst-row{display:grid;grid-template-columns:1.3fr 1fr auto;gap:8px;align-items:center}
 @media (max-width:520px){.gst-row{grid-template-columns:1fr auto}.gst-row .mid{grid-column:1/-1;order:3}}
 .due{font-variant-numeric:tabular-nums}
 
-.ring{--p:0;width:74px;height:74px;border-radius:50%;flex:none;display:grid;place-items:center;
-  background:conic-gradient(var(--ok) calc(var(--p)*1%),#F1EAE0 0)}
+.ring{--p:0;width:74px;height:74px;border-radius:50%;flex:none;display:grid;place-items:center;background:conic-gradient(var(--ok) calc(var(--p)*1%),#F1EAE0 0)}
 .ring span{width:56px;height:56px;border-radius:50%;background:#fff;display:grid;place-items:center;font-weight:800;font-size:14px;font-variant-numeric:tabular-nums}
 .addrow{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
 .addrow .inp{flex:1;min-width:140px}
+
+.feed .fi{display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--line);font-size:13px}
+.feed .fi:last-child{border-bottom:0}
+.feed .av{flex:none;width:28px;height:28px;border-radius:50%;background:var(--gold-l);color:var(--maroon-d);display:grid;place-items:center;font-weight:800;font-size:12px}
+.hist{display:flex;flex-direction:column;gap:8px}
+.hist .h{background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.hist .hh{display:flex;align-items:center;gap:8px;font-size:12.5px;margin-bottom:4px}
+.hist .ch{font-size:13px;padding:2px 0;overflow-wrap:anywhere}
+.hist .ch s{color:var(--bad);text-decoration-thickness:1px}
+.hist .ch ins{color:var(--ok);text-decoration:none;font-weight:700}
 
 .modal{position:fixed;inset:0;z-index:50;background:rgba(43,26,23,.45);display:flex;align-items:flex-end;justify-content:center}
 .modal.hidden{display:none}
@@ -162,16 +193,25 @@ textarea.inp{min-height:76px;resize:vertical}
 .form{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .form .full{grid-column:1/-1}
 @media (max-width:420px){.form{grid-template-columns:1fr}}
-.sheet .foot{display:flex;gap:8px;margin-top:14px;align-items:center}
-.sheet .foot .grow{flex:1}
+.sheet .foot{display:flex;gap:8px;margin-top:14px;align-items:center;flex-wrap:wrap}
 
-#toast{position:fixed;left:50%;bottom:86px;transform:translateX(-50%);background:var(--maroon-d);color:#fff;padding:10px 16px;border-radius:10px;font-size:13.5px;font-weight:600;opacity:0;pointer-events:none;transition:opacity .2s;z-index:60;max-width:90%;text-align:center}
+#toast{position:fixed;left:50%;bottom:86px;transform:translateX(-50%);background:var(--maroon-d);color:#fff;padding:10px 16px;border-radius:10px;font-size:13.5px;font-weight:600;opacity:0;pointer-events:none;transition:opacity .2s;z-index:90;max-width:90%;text-align:center}
 #toast.show{opacity:1}
 .banner{background:var(--warn-bg);color:var(--warn);border:1px solid #F3D9A8;border-radius:10px;padding:9px 12px;font-size:13px;font-weight:600;margin-bottom:12px}
-.pin{position:fixed;inset:0;z-index:80;display:grid;place-items:center;padding:16px;background:linear-gradient(135deg,var(--maroon-d),var(--maroon))}
-.pinbox{background:var(--ivory);border-radius:18px;padding:24px 20px;width:100%;max-width:320px;text-align:center}
-.pinbox h2{font-family:var(--f-display);margin:0;color:var(--maroon-d);font-size:26px}.pinbox p{margin:4px 0 14px;color:var(--muted)}
 .note{font-size:12.5px;color:var(--muted);background:#fffdf8;border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-top:12px}
+
+.gate{position:fixed;inset:0;z-index:80;display:grid;place-items:center;padding:16px;background:linear-gradient(135deg,var(--maroon-d),var(--maroon))}
+.gatebox{background:var(--ivory);border-radius:18px;padding:24px 20px;width:100%;max-width:340px;text-align:center;display:flex;flex-direction:column;gap:10px}
+.gatebox h2{font-family:var(--f-display);margin:0;color:var(--maroon-d);font-size:28px}
+.gatebox p{margin:0 0 4px;color:var(--muted)}
+.gatebox .field{text-align:left}
+
+.setsec{margin-bottom:14px}
+.setsec .help{font-size:12.5px;color:var(--muted);margin:-4px 0 10px}
+.rowed{display:flex;gap:6px;align-items:center;margin-bottom:6px}
+.rowed .inp{min-height:38px}
+.tick{display:flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;white-space:nowrap}
+.duegrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px}
 </style>
 </head>
 <body>
@@ -183,7 +223,10 @@ textarea.inp{min-height:76px;resize:vertical}
       <div class="sub">D M B Sweets Pvt Ltd · Jaipur</div>
       <div class="live off" id="live"><i></i><span>Connecting…</span></div>
     </div>
-    <div class="date" id="hdate"></div>
+    <div class="right">
+      <a class="gear" id="gearBtn" href="#settings" aria-label="Settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg><span>Settings</span></a>
+      <div class="who" id="who"></div>
+    </div>
   </div>
 </header>
 <nav class="tabs" id="tabs" aria-label="Sections"></nav>
@@ -191,16 +234,24 @@ textarea.inp{min-height:76px;resize:vertical}
 <nav class="bnav" id="bnav" aria-label="Sections"></nav>
 <div id="modal" class="modal hidden" role="dialog" aria-modal="true"><div class="sheet" id="sheet"></div></div>
 <div id="toast" role="status"></div>
+<input type="file" id="fileIn" accept=".json,application/json" hidden>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script>
-/* ---------- settings ---------- */
+"use strict";
+/* ================= CONFIG ================= */
+const CLOUD=/*CLOUD*/true;   // false = TEST copy: nothing is saved to the cloud
 const FB={apiKey:"AIzaSyB85R_6aE3qi2e7p6itnWvJwBp8zOfXlIE",authDomain:"dmbcashpilot.firebaseapp.com",projectId:"dmbcashpilot",storageBucket:"dmbcashpilot.firebasestorage.app",messagingSenderId:"495403440515",appId:"1:495403440515:web:ea276bf425cfc50133feb6"};
-const APP='dmbwt';          // sab data Firestore ke "kv" collection mein is tag ke saath (cash slip data alag rehta hai)
-const TEAM_PIN='1234';      // team PIN; badalna ho to yahan badlo ('' = PIN band)
-const CLOUD=true;           // false = test copy, kuch bhi cloud pe save nahi hoga
-/* ---------- helpers ---------- */
+const APP='dmbwt';            // every record is saved in Firestore "kv" with this tag; cash slip data is never touched
+const DEF={pin:'1234',team:[],outlets:['Kartarpura','Lal Kothi','Jhotwara','Kalwar'],
+  vTypes:[{name:'Purchase',ow:false},{name:'Journal',ow:false},{name:'Cash',ow:true},{name:'Sales',ow:true}],
+  oCats:['DP/SS','Credit Note','Binix','Zomato','Swiggy','Dine in','Royalty bill','Other'],
+  ents:[{key:'DMB',name:'D M B Sweets Pvt Ltd',freq:'M'},{key:'DFP',name:'DMB Food Products',freq:'Q'},{key:'SD',name:'Suman Dairy',freq:'Q'}],
+  due:{m1:11,m3b:20,q1:13,q3b:24,pmt:25},
+  places:['Client Place','Office','WFH']};
+
+/* ================= HELPERS ================= */
 const $=s=>document.querySelector(s);
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const pad=n=>String(n).padStart(2,'0');
@@ -212,9 +263,16 @@ const addDay=(d,k)=>{const x=new Date(d+'T00:00:00');x.setDate(x.getDate()+k);re
 const MN=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 const fmtMonth=p=>{if(!p)return'';const[y,m]=p.split('-');return`${MN[+m-1]} ${y}`};
 const fmtDate=d=>{if(!d)return'';const[y,m,dd]=d.split('-');return`${+dd} ${MN[+m-1]} ${y.slice(2)}`};
+const fmtTime=t=>{const d=new Date(t);return`${d.getDate()} ${MN[d.getMonth()]}, ${d.toLocaleTimeString('en-IN',{hour:'numeric',minute:'2-digit'})}`};
 const daysTo=d=>Math.round((new Date(d+'T00:00:00')-new Date(today()+'T00:00:00'))/864e5);
 const rupee=n=>(n===''||n==null||isNaN(n))?'':'₹'+Number(n).toLocaleString('en-IN',{maximumFractionDigits:2});
+const slug=s=>String(s).replace(/[^A-Za-z0-9-]+/g,'-').replace(/^-|-$/g,'')||'x';
+const fyOf=p=>{const[y,m]=p.split('-').map(Number);return m>=4?y:y-1};
+const fyLabel=y=>`FY ${y}-${String(y+1).slice(2)}`;
+const lastDay=(y,m)=>new Date(y,m,0).getDate();
+const clone=o=>JSON.parse(JSON.stringify(o));
 function toast(msg){const t=$('#toast');t.textContent=msg;t.classList.add('show');clearTimeout(toast._t);toast._t=setTimeout(()=>t.classList.remove('show'),2600)}
+let ls={get:k=>{try{return localStorage.getItem(k)}catch(e){return null}},set:(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}}};
 
 const I={
  home:'<path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>',
@@ -227,280 +285,312 @@ const I={
  book:'<path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M8 7h7"/>',
  cash:'<rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/><path d="M6 10v4M18 10v4"/>',
  sale:'<path d="M20 12l-8 8-9-9V3h8z"/><circle cx="7.5" cy="7.5" r="1.5"/>',
- check:'<path d="M5 12l5 5L20 7"/>',
- plus:'<path d="M12 5v14M5 12h14"/>',
- l:'<path d="M15 6l-6 6 6 6"/>', r:'<path d="M9 6l6 6-6 6"/>'
+ check:'<path d="M5 12l5 5L20 7"/>', plus:'<path d="M12 5v14M5 12h14"/>',
+ l:'<path d="M15 6l-6 6 6 6"/>', r:'<path d="M9 6l6 6-6 6"/>',
+ hist:'<path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l3 2"/>',
+ edit:'<path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M14 6l4 4"/>'
 };
-const ic=(k,extra='')=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" ${extra}>${I[k]}</svg>`;
+const ic=k=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${I[k]}</svg>`;
+const vIcon=n=>({Purchase:'cart',Journal:'book',Cash:'cash',Sales:'sale'}[n]||'voucher');
 
-/* ---------- constants ---------- */
 const TABS=[['home','Home','home'],['vouching','Vouching','voucher'],['observations','Observations','eye'],['gst','GST','gst'],['daily','Daily','day'],['todo','To-Do','todo']];
-const VTYPES=[['Purchase','cart'],['Journal','book'],['Cash','cash'],['Sales','sale']];
 const VSTAT=['Not started','In progress','Done'];
-const OCATS=['DP/SS','Credit Note','Binix','Zomato','Swiggy','Dine in','Royalty bill','Other'];
-const OAREAS=['Sales','Purchase','Journal','Cash'];
+const OAREAS=()=>ST().vTypes.map(v=>v.name);
 const OSTAT=['Open','Discussed','Resolved'];
-const ENT={
- DMB:{name:'D M B Sweets Pvt Ltd',freq:'Monthly'},
- DFP:{name:'DMB Food Products',freq:'Quarterly · QRMP'},
- SD:{name:'Suman Dairy',freq:'Quarterly · QRMP'}
-};
 const GSTAT=['Pending','Prepared','Paid','Filed'];
 const PRI=['High','Medium','Low'];
 const TSTAT=['Pending','In progress','Done'];
+const COLS=['settings','vouching','observations','gst','tasks','log'];
 
-/* GST calendar: return period P → due dates in following month */
-function gstRows(period){
-  const [,m]=period.split('-').map(Number);
-  const nx=addMonth(period,1); const due=d=>`${nx}-${pad(d)}`;
-  const rows=[
-    {ent:'DMB',form:'GSTR-1',kind:'Return',due:due(11)},
-    {ent:'DMB',form:'GSTR-3B',kind:'Return + Payment',due:due(20)}];
-  const qEnd=[3,6,9,12].includes(m);
-  for(const e of ['DFP','SD']){
-    if(qEnd){
-      rows.push({ent:e,form:'GSTR-1 (Qtly)',kind:'Return',due:due(13)});
-      rows.push({ent:e,form:'GSTR-3B (Qtly)',kind:'Return + Payment',due:due(24)});
-    } else rows.push({ent:e,form:'PMT-06',kind:'Payment',due:due(25)});
-  }
-  return rows.map(r=>{
-    const id=`${r.ent}__${r.form.replace(/[^A-Za-z0-9-]/g,'')}__${period}`;
-    const d=S.gst[id]||{};
-    const st=d.status||'Pending';
-    const done=st==='Filed'||(r.kind==='Payment'&&st==='Paid');
-    return {...r,period,id,doc:d,status:st,done,due:d.due||r.due};
-  });
-}
-
-/* ---------- state ---------- */
-const S={vouching:{},observations:[],gst:{},tasks:[],log:[]};
-const U={vPeriod:curMonth(),gPeriod:addMonth(curMonth(),-1),obsCat:'All',obsArea:'All',obsStat:'Open',dDate:today(),pKind:'pendency',pShow:'open'};
-let tab='home', db=null, live=false, readOnly=false, firstData=new Set(), loadTimer=null;
-
-function readHash(){const h=(location.hash||'').slice(1);tab=TABS.some(t=>t[0]===h)?h:'home'}
+/* ================= STATE ================= */
+const S={settings:{},vouching:{},observations:{},gst:{},tasks:{},log:{}};
+const U={vPeriod:curMonth(),gPeriod:addMonth(curMonth(),-1),obsCat:'All',obsArea:'All',obsStat:'Open',obsQ:'',dDate:today(),pKind:'pendency',pShow:'open'};
+let tab='home', db=null, live=false, me=ls.get('dmbwt_me')||'', firstData=new Set(), loadTimer=null, settingsLoaded=false;
+const ST=()=>{const s=S.settings.main||{};return{...DEF,...s,due:{...DEF.due,...(s.due||{})}}};
+const all=c=>Object.values(S[c]).filter(d=>!d.deleted);
+const TABK=TABS.map(t=>t[0]).concat('settings');
+function readHash(){const h=(location.hash||'').slice(1);tab=TABK.includes(h)?h:'home'}
 readHash();
 addEventListener('hashchange',()=>{readHash();render();scrollTo(0,0)});
 
-/* ---------- db ---------- */
+/* ================= DATABASE ================= */
 function mockDb(){
-  const store={},subs={};
-  const emit=c=>(subs[c]||[]).forEach(f=>f({docs:Object.entries(store[c]||{}).map(([id,d])=>({id,exists:true,data:()=>d})),metadata:{fromCache:false}}));
-  const docRef=(c,id)=>({id,
-    async set(d){(store[c]=store[c]||{})[id]=JSON.parse(JSON.stringify(d));emit(c)},
-    async update(d){store[c][id]={...store[c][id],...d};emit(c)},
-    async delete(){if(store[c])delete store[c][id];emit(c)}});
-  return {collection:c=>({
-    onSnapshot(f){(subs[c]=subs[c]||[]).push(f);setTimeout(()=>emit(c));return()=>{}},
-    doc:id=>docRef(c,id||Math.random().toString(36).slice(2,12))
-  })};
+  const store={},subs=[];
+  const emit=()=>subs.forEach(f=>f(Object.entries(store).map(([k,d])=>d),false));
+  return{listen(f){subs.push(f);setTimeout(emit);},
+    set:async(c,id,d)=>{store[c+'_'+id]={...clone(d),col:c,_id:id};emit()},
+    del:async(c,id)=>{delete store[c+'_'+id];emit()}};
 }
 function fbDb(){
   firebase.initializeApp(FB);
   const fs=firebase.firestore();
   try{fs.enablePersistence({synchronizeTabs:true}).catch(()=>{})}catch(e){}
-  const kv=fs.collection('kv'), subs={}, errs=[];
-  const view=(c,snap)=>({metadata:{fromCache:snap.metadata.fromCache},
-    docs:snap.docs.filter(d=>d.get('col')===c).map(d=>{const o={...d.data()};const id=o._id;delete o.app;delete o.col;delete o._id;return{id,exists:true,data:()=>o}})});
-  let last=null;
-  kv.where('app','==',APP).onSnapshot(snap=>{last=snap;for(const c in subs)subs[c].forEach(f=>f(view(c,snap)))},
-    e=>errs.forEach(f=>f({code:e.code==='permission-denied'?'permission':'unavailable',message:e.message})));
-  const race=p=>Promise.race([p,new Promise(r=>setTimeout(r,4000))]); // offline ho to bhi queue ho jaata hai
-  return{collection:c=>({
-    onSnapshot(f,err){(subs[c]=subs[c]||[]).push(f);if(err)errs.push(err);if(last)f(view(c,last));return()=>{}},
-    doc(id){id=id||kv.doc().id;const ref=kv.doc(`${APP}_${c}_${id}`);return{id,
-      set:d=>race(ref.set({...d,app:APP,col:c,_id:id})),
-      delete:()=>race(ref.delete())}}
-  })};
+  const kv=fs.collection('kv');
+  const race=p=>Promise.race([p,new Promise(r=>setTimeout(r,4000))]); // offline: saved on phone, sent when back online
+  return{
+    listen(f,err){kv.where('app','==',APP).onSnapshot(snap=>f(snap.docs.map(d=>d.data()),snap.metadata.fromCache),e=>err&&err(e))},
+    set:(c,id,d)=>race(kv.doc(`${APP}_${c}_${id}`).set({...d,app:APP,col:c,_id:id})),
+    del:(c,id)=>race(kv.doc(`${APP}_${c}_${id}`).delete())
+  };
 }
-async function write(col,id,data){
-  if(readOnly){toast('Aapke paas sirf dekhne ka access hai');return false}
-  try{
-    const ref=id?db.collection(col).doc(id):db.collection(col).doc();
-    await ref.set({...data,at:Date.now()});return true;
-  }catch(e){return fail(e)}
-}
-async function remove(col,id){
-  if(readOnly){toast('Aapke paas sirf dekhne ka access hai');return false}
-  try{await db.collection(col).doc(id).delete();return true}catch(e){return fail(e)}
-}
-function fail(e){
-  const c=e&&e.code;
-  if(c==='permission-denied'||c==='permission')toast('Firebase rules save allow nahi kar rahe. Rules check karo.');
-  else if(c==='invalid_argument')toast('Ye entry save nahi ho saki, details check karo.');
-  else if(c==='quota_exceeded')toast('Storage full ho gaya. Purani entries delete karo.');
-  else if(c==='resource_exhausted')toast('Thoda ruk ke dobara try karo.');
-  else toast('Save nahi hua. Internet check karke dobara try karo.');
-  render();return false;
-}
-function subscribe(col,map){
-  db.collection(col).onSnapshot(snap=>{
-    map(snap.docs.filter(d=>d.exists).map(d=>({id:d.id,...d.data()})));
-    if(!snap.metadata||!snap.metadata.fromCache){firstData.add(col);if(firstData.size===5){clearTimeout(loadTimer);setLive(live?'Live sync on':(CLOUD?'Offline':'TEST mode'),live)}}
-    render();
-  },err=>{clearTimeout(loadTimer);setLive('Sync band hai, page reload karo',false);render()});
+function onData(docs,fromCache){
+  COLS.forEach(c=>S[c]={});
+  docs.forEach(d=>{if(!S[d.col])return;const o={...d};delete o.app;delete o.col;o.id=o._id;delete o._id;S[d.col][o.id]=o});
+  if(!fromCache){settingsLoaded=true;clearTimeout(loadTimer);setLive(live?'Live sync on':(CLOUD?'Offline':'TEST mode'),live)}
+  if(S.settings.main||!fromCache)settingsLoaded=true;
+  render();
 }
 function setLive(txt,on){const el=$('#live');el.classList.toggle('off',!on);el.lastElementChild.textContent=txt}
 
-/* ---------- render shell ---------- */
+/* ---------- save with change history ---------- */
+const META=['at','by','hist','id'];
+const HIDE=['type','period','ent','form','col'];
+function flat(o,p,out){out=out||{};p=p||'';for(const k in o){if(!p&&(META.includes(k)||HIDE.includes(k)))continue;const v=o[k];
+  if(v&&typeof v==='object'&&!Array.isArray(v))flat(v,p+k+'.',out);else out[p+k]=Array.isArray(v)?v.map(x=>typeof x==='object'?Object.values(x).join(' / '):x).join(', '):v}return out}
+function diff(a,b){const A=flat(a||{}),B=flat(b);const ks=new Set([...Object.keys(A),...Object.keys(B)]);const ch=[];
+  ks.forEach(k=>{const x=A[k]==null?'':A[k],y=B[k]==null?'':B[k];if(String(x)!==String(y))ch.push({f:k,from:x,to:y})});return ch}
+async function save(col,id,obj,note){
+  if(!db)return false;
+  id=id||(Date.now().toString(36)+Math.random().toString(36).slice(2,7));
+  const old=S[col][id];
+  const ch=old?diff(old,obj):[];
+  if(old&&!ch.length&&!note){toast('No changes to save');return true}
+  const h={by:me||'Someone',at:Date.now(),note:note||(old?'Edited':'Created'),ch:old?ch:[]};
+  if(old){h.prev={};ch.forEach(c=>{const top=c.f.split('.')[0];h.prev[top]=old[top]===undefined?null:clone(old[top])})}
+  const body={...obj};delete body.id;
+  body.hist=[h,...((old&&old.hist)||[])].slice(0,25);
+  body.by=me||'';body.at=Date.now();
+  try{await db.set(col,id,body);return true}catch(e){return fail(e)}
+}
+function fail(e){
+  const c=e&&e.code;
+  if(c==='permission-denied')toast('Firebase rules are blocking this save. Check the Firestore rules.');
+  else if(c==='resource-exhausted')toast('Daily Firebase limit reached. Try again tomorrow.');
+  else toast('Could not save. Check the internet and try again.');
+  return false;
+}
+async function undo(col,id,i){
+  const cur=S[col][id];const h=cur.hist[i];if(!h||!h.prev)return;
+  const o=clone(cur);for(const k in h.prev){if(h.prev[k]===null)delete o[k];else o[k]=clone(h.prev[k])}
+  if(await save(col,id,o,`Undid ${h.by}'s change of ${fmtTime(h.at)}`))toast('Change undone');
+}
+async function softDelete(col,id){const o=S[col][id];if(o&&await save(col,id,{...o,deleted:true},'Deleted'))toast('Deleted. You can restore it from Settings.')}
+async function restore(col,id){const o=S[col][id];if(o){const n={...o};delete n.deleted;if(await save(col,id,n,'Restored'))toast('Restored')}}
+
+/* ================= SHELL ================= */
 function navHTML(){return TABS.map(([k,l,i])=>`<a href="#${k}" class="${tab===k?'on':''}">${ic(i)}<span>${l}</span></a>`).join('')}
 function render(){
-  const d=new Date();
-  $('#hdate').innerHTML=`<b>${d.toLocaleDateString('en-IN',{weekday:'long'})}</b>${d.getDate()} ${MN[d.getMonth()]} ${d.getFullYear()}`;
   $('#tabs').innerHTML=navHTML();$('#bnav').innerHTML=navHTML();
-  const banner=!live&&db?`<div class="banner">${CLOUD?'Internet/Firebase se connect nahi hua. Ye entries sirf is screen pe hain, save nahi hongi.':'TEST copy: entries cloud pe save nahi hongi.'}</div>`:'';
-  const ro=readOnly?`<div class="banner">Is device se save nahi ho pa raha.</div>`:'';
-  const views={home:vHome,vouching:vVouching,observations:vObs,gst:vGst,daily:vDaily,todo:vTodo};
-  $('#view').innerHTML=banner+ro+views[tab]();
+  $('#gearBtn').classList.toggle('on',tab==='settings');
+  $('#who').innerHTML=me?`Signed in as <b>${esc(me)}</b>`:'';
+  const banner=!live&&db?`<div class="banner">${CLOUD?'Not connected to the internet. New entries are kept on this phone and will sync when you are back online.':'TEST copy: entries are not saved to the cloud.'}</div>`:'';
+  const views={home:vHome,vouching:vVouching,observations:vObs,gst:vGst,daily:vDaily,todo:vTodo,settings:vSettings};
+  $('#view').innerHTML=banner+views[tab]();
+  const on=document.querySelector('.mchip.on');if(on){const s=on.parentElement;s.scrollLeft=on.offsetLeft-s.clientWidth/2+on.clientWidth/2}
 }
-
-/* ---------- views ---------- */
 function statusChip(s){
   const m={'Done':'c-ok','Filed':'c-ok','Paid':'c-ok','Resolved':'c-ok','In progress':'c-info','Prepared':'c-info','Discussed':'c-info','Pending':'c-warn','Not started':'c-warn','Open':'c-bad'};
   return `<span class="chip ${m[s]||''}">${esc(s)}</span>`;
 }
 function dueChip(due,done){
   if(done)return'<span class="chip c-ok">Done</span>';
-  if(!due)return'';
-  const n=daysTo(due);
-  if(n<0)return`<span class="chip c-bad">${-n} din overdue</span>`;
-  if(n===0)return'<span class="chip c-bad">Aaj due</span>';
-  if(n<=5)return`<span class="chip c-warn">${n} din baaki</span>`;
-  return`<span class="chip">${n} din baaki</span>`;
+  if(!due)return'';const n=daysTo(due);
+  if(n<0)return`<span class="chip c-bad">Overdue ${-n}d</span>`;
+  if(n===0)return'<span class="chip c-bad">Due today</span>';
+  if(n<=5)return`<span class="chip c-warn">Due in ${n}d</span>`;
+  return`<span class="chip">Due in ${n}d</span>`;
 }
 const priChip=p=>`<span class="chip ${p==='High'?'c-bad':p==='Medium'?'c-warn':''}">${esc(p||'Medium')}</span>`;
+const editedLine=o=>o&&o.hist&&o.hist[0]?`<span class="edited">${esc(o.hist[0].note==='Created'?'Added':'Updated')} by ${esc(o.hist[0].by)} · ${fmtTime(o.hist[0].at)}</span>`:'';
+const histBtn=(col,id)=>`<button class="btn ghost sm" data-act="hist" data-col="${col}" data-id="${esc(id)}" aria-label="Change history">${ic('hist')}History</button>`;
+
+function monthStrip(sel,stat,act){
+  const fy=fyOf(sel);const ms=[];for(let i=0;i<12;i++)ms.push(addMonth(`${fy}-04`,i));
+  return `<div class="fyrow"><button class="btn ghost sm" data-act="${act}" data-k="-1" aria-label="Previous month">${ic('l')}</button><b>${fyLabel(fy)} · ${fmtMonth(sel)}</b><button class="btn ghost sm" data-act="${act}" data-k="1" aria-label="Next month">${ic('r')}</button></div>
+  <div class="mstrip">${ms.map(p=>{const s=stat(p);return`<button class="mchip ${p===sel?'on':''} ${p===curMonth()?'now':''}" data-act="${act}" data-p="${p}"><b>${MN[+p.slice(5)-1]}</b><span>${s.txt}</span>${s.bad?'<i class="dot" title="Overdue"></i>':''}<em style="width:${s.pct}%"></em></button>`}).join('')}</div>`;
+}
+
+/* ================= GST ================= */
+function gstRows(period){
+  const st=ST();const[y,m]=period.split('-').map(Number);
+  const nx=addMonth(period,1);const[ny,nm]=nx.split('-').map(Number);
+  const due=d=>`${nx}-${pad(Math.min(+d||1,lastDay(ny,nm)))}`;
+  const qEnd=[3,6,9,12].includes(m);
+  const rows=[];
+  st.ents.forEach(e=>{
+    if(e.freq==='M'){rows.push({ent:e,form:'GSTR-1',kind:'Return',due:due(st.due.m1)});rows.push({ent:e,form:'GSTR-3B',kind:'Return + Payment',due:due(st.due.m3b)})}
+    else if(qEnd){rows.push({ent:e,form:'GSTR-1 (Qtly)',kind:'Return',due:due(st.due.q1)});rows.push({ent:e,form:'GSTR-3B (Qtly)',kind:'Return + Payment',due:due(st.due.q3b)})}
+    else rows.push({ent:e,form:'PMT-06',kind:'Payment',due:due(st.due.pmt)});
+  });
+  return rows.map(r=>{
+    const id=`${slug(r.ent.key)}__${slug(r.form)}__${period}`;
+    const d=S.gst[id]&&!S.gst[id].deleted?S.gst[id]:{};
+    const status=d.status||'Pending';
+    const done=status==='Filed'||(r.kind==='Payment'&&status==='Paid');
+    return{...r,period,id,doc:d,status,done,due:d.due||r.due};
+  });
+}
+function gstStat(p){const R=gstRows(p);const d=R.filter(r=>r.done).length;return{txt:`${d}/${R.length}`,pct:R.length?d/R.length*100:0,bad:R.some(r=>!r.done&&daysTo(r.due)<0)}}
+
+/* ================= VOUCHING ================= */
+const vId=(t,p)=>`${slug(t)}__${p}`;
+function vStatus(t,d){
+  d=d||{};const outs=ST().outlets;
+  if(t.ow&&outs.length){const v=outs.map(o=>(d.outlets||{})[o]||'Not started');
+    if(v.every(x=>x==='Done'))return'Done';if(v.some(x=>x!=='Not started'))return'In progress';return'Not started'}
+  return d.status||'Not started';
+}
+function vStat(p){const T=ST().vTypes;const d=T.filter(t=>vStatus(t,S.vouching[vId(t.name,p)])==='Done').length;return{txt:`${d}/${T.length}`,pct:T.length?d/T.length*100:0,bad:false}}
+
+/* ================= VIEWS ================= */
+function feedItems(n){
+  const out=[];
+  const label=(c,o)=>c==='vouching'?`${o.type} vouching · ${fmtMonth(o.period)}`:c==='observations'?`Observation · ${o.cat||''}${o.vno?' #'+o.vno:''}`:c==='gst'?`${o.form} · ${(ST().ents.find(e=>slug(e.key)===o.id.split('__')[0])||{}).name||''} · ${fmtMonth(o.period)}`:c==='tasks'?(o.kind==='target'?'Target: ':'')+o.title:c==='log'?'Daily tracker: '+o.work:'Settings';
+  COLS.forEach(c=>Object.values(S[c]).forEach(o=>(o.hist||[]).slice(0,3).forEach(h=>out.push({c,o,h,lab:label(c,o)}))));
+  return out.sort((a,b)=>b.h.at-a.h.at).slice(0,n);
+}
+function chText(c){const f=c.f.startsWith('outlets.')?c.f.slice(8):(LAB[c.f]||c.f);return`${esc(f)}: ${c.from===''?'<i class="muted">blank</i>':`<s>${esc(c.from)}</s>`} → ${c.to===''?'<i class="muted">blank</i>':`<ins>${esc(c.to)}</ins>`}`}
+const LAB={status:'Status',assignee:'Assigned to',total:'Total vouchers',checked:'Vouchers checked',range:'Period covered',remarks:'Remarks',area:'Vouching area',cat:'Category',outlet:'Outlet',date:'Date',vno:'Voucher / bill no.',amount:'Amount',text:'Observation',action:'Action / reply',due:'Due date',ref:'ARN / challan',doneOn:'Done on',title:'Task',priority:'Priority',notes:'Notes',done:'Done',work:'Work',name:'Name',hours:'Hours',place:'Place',deleted:'Deleted',pin:'PIN',team:'Team',outlets:'Outlets',vTypes:'Vouching types',oCats:'Observation categories',ents:'GST entities',places:'Places','due.m1':'GSTR-1 due day','due.m3b':'GSTR-3B due day','due.q1':'QRMP GSTR-1 due day','due.q3b':'QRMP GSTR-3B due day','due.pmt':'PMT-06 due day',doneDate:'Done on'};
 
 function vHome(){
   const gAll=gstRows(addMonth(curMonth(),-1)).filter(r=>!r.done).sort((a,b)=>a.due.localeCompare(b.due));
   const gSoon=gAll.filter(r=>daysTo(r.due)<=7);
-  const vp=curMonth(); const vDone=VTYPES.filter(([t])=>(S.vouching[`${t}__${vp}`]||{}).status==='Done').length;
-  const openObs=S.observations.filter(o=>o.status!=='Resolved');
-  const tgt=S.tasks.filter(t=>t.kind==='target'&&t.date===today()); const tgtDone=tgt.filter(t=>t.done).length;
-  const pend=S.tasks.filter(t=>(t.kind==='pendency'||t.kind==='misc')&&t.status!=='Done');
+  const vp=curMonth();const vs=vStat(vp);
+  const openObs=all('observations').filter(o=>o.status!=='Resolved');
+  const tgt=all('tasks').filter(t=>t.kind==='target'&&t.date===today());const tgtDone=tgt.filter(t=>t.done).length;
+  const pend=all('tasks').filter(t=>(t.kind==='pendency'||t.kind==='misc')&&t.status!=='Done');
   const over=pend.filter(t=>t.due&&daysTo(t.due)<0);
-  const hi=pend.slice().sort(sortTasks).slice(0,5);
-  return `
+  const feed=feedItems(8);
+  const hr=new Date().getHours();
+  return `<div class="bar"><h2 class="sec grow">Good ${hr<12?'morning':hr<17?'afternoon':'evening'}${me?', '+esc(me):''}</h2></div>
   <div class="grid g4" style="margin-bottom:14px">
-    <a class="card stat" href="#gst"><div class="l">GST due (7 din)</div><div class="n">${gSoon.length}</div><div class="s ${gAll.some(r=>daysTo(r.due)<0)?'':'muted'}">${gAll.some(r=>daysTo(r.due)<0)?'<span class="chip c-bad">Overdue hai</span>':'Sab time pe'}</div></a>
-    <a class="card stat" href="#vouching"><div class="l">Vouching · ${fmtMonth(vp)}</div><div class="n">${vDone}/4</div><div class="s muted">areas done</div></a>
-    <a class="card stat" href="#observations"><div class="l">Open observations</div><div class="n">${openObs.length}</div><div class="s muted">${S.observations.length} total</div></a>
-    <a class="card stat" href="#daily"><div class="l">Aaj ka target</div><div class="n">${tgtDone}/${tgt.length}</div><div class="s muted">complete</div></a>
-    <a class="card stat" href="#todo"><div class="l">Pendency open</div><div class="n">${pend.length}</div><div class="s">${over.length?`<span class="chip c-bad">${over.length} overdue</span>`:'<span class="muted">koi overdue nahi</span>'}</div></a>
+    <a class="card stat" href="#gst"><div class="l">GST due in 7 days</div><div class="n">${gSoon.length}</div><div class="s">${gAll.some(r=>daysTo(r.due)<0)?'<span class="chip c-bad">Overdue items</span>':'<span class="muted">All on time</span>'}</div></a>
+    <a class="card stat" href="#vouching"><div class="l">Vouching · ${fmtMonth(vp)}</div><div class="n">${vs.txt}</div><div class="s muted">areas done</div></a>
+    <a class="card stat" href="#observations"><div class="l">Open observations</div><div class="n">${openObs.length}</div><div class="s muted">${all('observations').length} in total</div></a>
+    <a class="card stat" href="#daily"><div class="l">Today's targets</div><div class="n">${tgtDone}/${tgt.length}</div><div class="s muted">completed</div></a>
+    <a class="card stat" href="#todo"><div class="l">Open pendency</div><div class="n">${pend.length}</div><div class="s">${over.length?`<span class="chip c-bad">${over.length} overdue</span>`:'<span class="muted">Nothing overdue</span>'}</div></a>
   </div>
   <div class="grid g2">
-    <div class="card"><div class="panel-title"><h3>Upcoming GST</h3><a class="btn ghost sm" href="#gst">Sab dekho</a></div>
-      <div class="list">${gAll.slice(0,6).map(r=>`<div class="item ${daysTo(r.due)<0?'stripe-bad':daysTo(r.due)<=5?'stripe-warn':''}"><div class="body"><div class="t">${esc(r.form)} · ${esc(ENT[r.ent].name)}</div><div class="meta"><span>${fmtMonth(r.period)}</span><span class="due">Due ${fmtDate(r.due)}</span>${dueChip(r.due,r.done)}</div></div></div>`).join('')||'<div class="empty">Saari GST compliance done hai 🎉</div>'}</div></div>
-    <div class="card"><div class="panel-title"><h3>Aaj ke targets</h3><a class="btn ghost sm" href="#daily">Open</a></div>
-      <div class="list">${tgt.map(targetItem).join('')||'<div class="empty">Aaj ka koi target nahi daala. Daily tab mein add karo.</div>'}</div></div>
+    <div class="card"><div class="panel-title"><h3>Upcoming GST</h3><a class="btn ghost sm" href="#gst">View all</a></div>
+      <div class="list">${gAll.slice(0,6).map(r=>`<div class="item ${daysTo(r.due)<0?'stripe-bad':daysTo(r.due)<=5?'stripe-warn':''}"><div class="body"><div class="t">${esc(r.form)} · ${esc(r.ent.name)}</div><div class="meta"><span>${fmtMonth(r.period)}</span><span class="due">Due ${fmtDate(r.due)}</span>${dueChip(r.due,r.done)}</div></div></div>`).join('')||'<div class="empty">All GST work for last month is done.</div>'}</div></div>
+    <div class="card"><div class="panel-title"><h3>Today's targets</h3><a class="btn ghost sm" href="#daily">Open</a></div>
+      <div class="list">${tgt.map(targetItem).join('')||'<div class="empty">No targets set for today. Add them in the Daily tab.</div>'}</div></div>
     <div class="card"><div class="panel-title"><h3>Top pendency</h3><a class="btn ghost sm" href="#todo">Open</a></div>
-      <div class="list">${hi.map(taskItem).join('')||'<div class="empty">Koi pendency nahi.</div>'}</div></div>
-    <div class="card"><div class="panel-title"><h3>Latest observations</h3><a class="btn ghost sm" href="#observations">Open</a></div>
-      <div class="list">${openObs.slice().sort((a,b)=>(b.at||0)-(a.at||0)).slice(0,4).map(obsItem).join('')||'<div class="empty">Koi open observation nahi.</div>'}</div></div>
+      <div class="list">${pend.slice().sort(sortTasks).slice(0,5).map(taskItem).join('')||'<div class="empty">No open pendency.</div>'}</div></div>
+    <div class="card"><div class="panel-title"><h3>Recent changes</h3></div>
+      <div class="feed">${feed.map(x=>`<div class="fi"><div class="av">${esc((x.h.by||'?').slice(0,1).toUpperCase())}</div><div><b>${esc(x.h.by)}</b> ${esc(x.h.note.charAt(0).toLowerCase()+x.h.note.slice(1))} <b>${esc(x.lab)}</b>${(x.h.ch||[]).filter(c=>c.f!=='deleted').length?`<div class="small muted">${x.h.ch.filter(c=>c.f!=='deleted').slice(0,2).map(chText).join(' · ')}</div>`:''}<div class="small muted">${fmtTime(x.h.at)}</div></div></div>`).join('')||'<div class="empty">Changes made by the team will show here.</div>'}</div></div>
   </div>`;
 }
 
 function vVouching(){
-  const p=U.vPeriod;
-  const cards=VTYPES.map(([t,i])=>{
-    const d=S.vouching[`${t}__${p}`]||{};
-    const tot=+d.total||0, chk=+d.checked||0, pct=tot?Math.min(100,Math.round(chk/tot*100)):(d.status==='Done'?100:0);
-    const obs=S.observations.filter(o=>o.area===t&&(o.date||'').startsWith(p));
-    return `<div class="card vcard" data-act="vedit" data-t="${t}" tabindex="0" role="button" aria-label="Update ${t} vouching">
-      <div class="vhead"><div class="vicon">${ic(i)}</div><div class="grow"><div class="vname">${t} Vouching</div><div class="small muted">${fmtMonth(p)}</div></div>${statusChip(d.status||'Not started')}</div>
+  const p=U.vPeriod, st=ST();
+  const cards=st.vTypes.map(t=>{
+    const id=vId(t.name,p), d=S.vouching[id]||{};
+    const status=vStatus(t,d);
+    const tot=+d.total||0, chk=+d.checked||0;
+    const outs=t.ow?st.outlets:[];
+    const pct=outs.length?Math.round(outs.filter(o=>(d.outlets||{})[o]==='Done').length/outs.length*100):(tot?Math.min(100,Math.round(chk/tot*100)):(status==='Done'?100:0));
+    const obs=all('observations').filter(o=>o.area===t.name&&(o.date||'').startsWith(p));
+    return `<div class="card vcard">
+      <div class="vhead"><div class="vicon">${ic(vIcon(t.name))}</div><div class="grow"><div class="vname">${esc(t.name)} Vouching</div><div class="small muted">${fmtMonth(p)}</div></div>${statusChip(status)}</div>
+      <div class="prog" title="${pct}%"><i style="width:${pct}%"></i></div>
+      ${outs.length?`<div class="small muted">Tap an outlet to change its status</div><div class="outs">${outs.map(o=>{const s=(d.outlets||{})[o]||'Not started';return`<button class="ob s${VSTAT.indexOf(s)}" data-act="vout" data-t="${esc(t.name)}" data-o="${esc(o)}"><b>${esc(o)}</b><span>${s}</span></button>`}).join('')}</div>`:''}
       <div class="kv"><span>Vouchers checked</span><b>${chk} / ${tot||'–'}</b></div>
-      <div class="prog"><i style="width:${pct}%"></i></div>
+      ${d.range?`<div class="kv"><span>Period covered</span><b>${esc(d.range)}</b></div>`:''}
       <div class="kv"><span>Assigned to</span><b>${esc(d.assignee)||'–'}</b></div>
       <div class="kv"><span>Observations</span><b>${obs.length} (${obs.filter(o=>o.status!=='Resolved').length} open)</b></div>
       ${d.remarks?`<div class="small muted" style="margin-top:6px;white-space:pre-wrap">${esc(d.remarks)}</div>`:''}
+      <div class="vfoot"><button class="btn sm" data-act="vedit" data-t="${esc(t.name)}">${ic('edit')}Edit</button>${d.hist?histBtn('vouching',id):''}<span class="grow"></span>${editedLine(d)}</div>
     </div>`}).join('');
-  const sales=S.observations.filter(o=>o.area==='Sales'&&(o.date||'').startsWith(p));
-  return `<div class="bar"><h2 class="sec grow">Vouching</h2>
-      <button class="btn ghost sm" data-act="vmon" data-k="-1" aria-label="Previous month">${ic('l','width="16" height="16"')}</button>
-      <input type="month" class="inp mini" id="vPeriod" value="${p}" aria-label="Vouching month">
-      <button class="btn ghost sm" data-act="vmon" data-k="1" aria-label="Next month">${ic('r','width="16" height="16"')}</button></div>
+  const sales=all('observations').filter(o=>(o.date||'').startsWith(p));
+  return `<div class="bar"><h2 class="sec grow">Vouching</h2></div>
+    ${monthStrip(p,vStat,'vmon')}
     <div class="grid g2">${cards}</div>
-    <div class="card" style="margin-top:14px"><div class="panel-title"><h3>Sales vouching observations · ${fmtMonth(p)}</h3><button class="btn sm" data-act="oadd" data-area="Sales">${ic('plus','width="15" height="15"')}Add</button></div>
-      <div class="chips">${OCATS.map(c=>{const n=sales.filter(o=>o.cat===c).length;return`<button data-act="ojump" data-cat="${esc(c)}">${esc(c)}<span class="ct">${n}</span></button>`}).join('')}</div>
+    <div class="card" style="margin-top:14px"><div class="panel-title"><h3>Observations · ${fmtMonth(p)}</h3><button class="btn sm" data-act="oadd" data-area="Sales">${ic('plus')}Add</button></div>
+      <div class="chips">${st.oCats.map(c=>{const n=sales.filter(o=>o.cat===c).length;return`<button data-act="ojump" data-cat="${esc(c)}">${esc(c)}<span class="ct">${n}</span></button>`}).join('')}</div>
     </div>`;
 }
 
 function obsItem(o){
   return `<div class="item clickable ${o.status==='Resolved'?'stripe-ok':o.status==='Open'?'stripe-bad':'stripe-warn'}" data-act="oedit" data-id="${esc(o.id)}">
-   <div class="body"><div class="meta" style="margin-top:0"><span class="chip c-gold">${esc(o.cat||'Other')}</span><span>${esc(o.area||'')} vouching</span>${o.date?`<span>${fmtDate(o.date)}</span>`:''}${o.vno?`<span>#${esc(o.vno)}</span>`:''}${o.amount?`<b style="color:var(--ink)">${rupee(o.amount)}</b>`:''}</div>
+   <div class="body"><div class="meta" style="margin-top:0"><span class="chip c-gold">${esc(o.cat||'Other')}</span><span>${esc(o.area||'')} vouching</span>${o.outlet?`<span>· ${esc(o.outlet)}</span>`:''}${o.date?`<span>${fmtDate(o.date)}</span>`:''}${o.vno?`<span>#${esc(o.vno)}</span>`:''}${o.amount!==''&&o.amount!=null?`<b style="color:var(--ink)">${rupee(o.amount)}</b>`:''}</div>
    <div class="desc">${esc(o.text)}</div>
    ${o.action?`<div class="small" style="margin-top:4px"><b>Action:</b> ${esc(o.action)}</div>`:''}
-   <div class="meta">${statusChip(o.status||'Open')}${o.assignee?`<span>👤 ${esc(o.assignee)}</span>`:''}</div></div>
+   <div class="meta">${statusChip(o.status||'Open')}${o.assignee?`<span>Assigned: ${esc(o.assignee)}</span>`:''}${editedLine(o)}</div></div>
    ${o.status!=='Resolved'?`<div class="acts"><button class="btn ghost sm" data-act="oresolve" data-id="${esc(o.id)}">Resolve</button></div>`:''}
   </div>`;
 }
 function vObs(){
-  let L=S.observations.slice();
+  const st=ST();
+  let L=all('observations');
   if(U.obsArea!=='All')L=L.filter(o=>o.area===U.obsArea);
+  if(U.obsQ){const q=U.obsQ.toLowerCase();L=L.filter(o=>[o.text,o.action,o.vno,o.cat,o.outlet,o.assignee].join(' ').toLowerCase().includes(q))}
   const base=L;
   if(U.obsCat!=='All')L=L.filter(o=>(o.cat||'Other')===U.obsCat);
   if(U.obsStat==='Open')L=L.filter(o=>o.status!=='Resolved');
   if(U.obsStat==='Resolved')L=L.filter(o=>o.status==='Resolved');
   L.sort((a,b)=>(b.date||'').localeCompare(a.date||'')||(b.at||0)-(a.at||0));
   const cnt=c=>base.filter(o=>(c==='All'||(o.cat||'Other')===c)&&o.status!=='Resolved').length;
-  return `<div class="bar"><h2 class="sec grow">Observations</h2><button class="btn" data-act="oadd">${ic('plus','width="16" height="16"')}Add observation</button></div>
+  return `<div class="bar"><h2 class="sec grow">Observations</h2><button class="btn" data-act="oadd">${ic('plus')}Add observation</button></div>
    <div class="bar">
-     <select class="inp mini" id="obsArea" aria-label="Vouching area">${['All',...OAREAS].map(a=>`<option ${U.obsArea===a?'selected':''} value="${a}">${a==='All'?'Saare areas':a+' vouching'}</option>`).join('')}</select>
+     <select class="inp mini" id="obsArea" aria-label="Vouching area">${['All',...OAREAS()].map(a=>`<option ${U.obsArea===a?'selected':''} value="${esc(a)}">${a==='All'?'All areas':esc(a)+' vouching'}</option>`).join('')}</select>
      <div class="seg">${['Open','Resolved','All'].map(s=>`<button data-act="ostat" data-v="${s}" class="${U.obsStat===s?'on':''}">${s}</button>`).join('')}</div>
+     <input class="inp mini grow" id="obsQ" placeholder="Search voucher no., text, outlet" value="${esc(U.obsQ)}" aria-label="Search observations" style="min-width:160px">
    </div>
-   <div class="chips" style="margin-bottom:12px">${['All',...OCATS].map(c=>`<button data-act="ocat" data-v="${esc(c)}" class="${U.obsCat===c?'on':''}">${esc(c)}<span class="ct">${cnt(c)}</span></button>`).join('')}</div>
-   <div class="list">${L.map(obsItem).join('')||'<div class="empty">Is filter mein koi observation nahi. "Add observation" se nayi daalo.</div>'}</div>`;
+   <div class="chips" style="margin-bottom:12px">${['All',...st.oCats].map(c=>`<button data-act="ocat" data-v="${esc(c)}" class="${U.obsCat===c?'on':''}">${esc(c)}<span class="ct">${cnt(c)}</span></button>`).join('')}</div>
+   <div class="list">${L.map(obsItem).join('')||'<div class="empty">No observations match this filter. Tap "Add observation" to add one.</div>'}</div>`;
 }
 
 function vGst(){
-  const p=U.gPeriod; const rows=gstRows(p);
-  const ents=['DMB','DFP','SD'];
-  const body=ents.map(e=>{
-    const R=rows.filter(r=>r.ent===e);
-    return `<div class="card ent"><div class="ent-h"><b>${esc(ENT[e].name)}</b><span class="chip c-gold">${ENT[e].freq}</span></div>
+  const p=U.gPeriod;const rows=gstRows(p);const st=ST();
+  const body=st.ents.map(e=>{
+    const R=rows.filter(r=>r.ent.key===e.key);
+    return `<div class="card" style="margin-bottom:12px"><div class="ent-h"><b>${esc(e.name)}</b><span class="chip c-gold">${e.freq==='M'?'Monthly':'Quarterly · QRMP'}</span></div>
      <div class="list">${R.map(r=>`<div class="item ${r.done?'stripe-ok':daysTo(r.due)<0?'stripe-bad':daysTo(r.due)<=5?'stripe-warn':''}">
        <div class="body gst-row">
-         <div><div class="t">${esc(r.form)}</div><div class="small muted">${esc(r.kind)} · Due <span class="due">${fmtDate(r.due)}</span></div></div>
-         <div class="mid small">${r.doc.amount?`<div><b>${rupee(r.doc.amount)}</b> paid</div>`:''}${r.doc.ref?`<div class="muted">Ref: ${esc(r.doc.ref)}</div>`:''}${r.doc.doneOn?`<div class="muted">On ${fmtDate(r.doc.doneOn)}</div>`:''}${r.doc.remarks?`<div class="muted">${esc(r.doc.remarks)}</div>`:''}</div>
-         <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">${statusChip(r.status)}${dueChip(r.due,r.done)}<button class="btn ghost sm" data-act="gedit" data-id="${r.id}">Update</button></div>
+         <div><div class="t">${esc(r.form)}</div><div class="small muted">${esc(r.kind)} · Due <span class="due">${fmtDate(r.due)}</span></div>${editedLine(r.doc)}</div>
+         <div class="mid small">${r.doc.amount!==''&&r.doc.amount!=null?`<div><b>${rupee(r.doc.amount)}</b> paid</div>`:''}${r.doc.ref?`<div class="muted">Ref: ${esc(r.doc.ref)}</div>`:''}${r.doc.doneOn?`<div class="muted">On ${fmtDate(r.doc.doneOn)}</div>`:''}${r.doc.remarks?`<div class="muted">${esc(r.doc.remarks)}</div>`:''}</div>
+         <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">${statusChip(r.status)}${dueChip(r.due,r.done)}<div style="display:flex;gap:6px">${r.doc.hist?histBtn('gst',r.id):''}<button class="btn ghost sm" data-act="gedit" data-id="${r.id}">Update</button></div></div>
        </div></div>`).join('')}</div></div>`}).join('');
   const qEnd=[3,6,9,12].includes(+p.split('-')[1]);
-  return `<div class="bar"><h2 class="sec grow">GST Payment & Returns</h2>
-     <button class="btn ghost sm" data-act="gmon" data-k="-1" aria-label="Previous period">${ic('l','width="16" height="16"')}</button>
-     <input type="month" class="inp mini" id="gPeriod" value="${p}" aria-label="Return period">
-     <button class="btn ghost sm" data-act="gmon" data-k="1" aria-label="Next period">${ic('r','width="16" height="16"')}</button></div>
-   <p class="small muted" style="margin:-6px 0 12px">Return period <b>${fmtMonth(p)}</b>, due in ${fmtMonth(addMonth(p,1))}. ${qEnd?'Quarter-end month: QRMP quarterly returns due.':'QRMP month: PMT-06 payment due.'}</p>
+  return `<div class="bar"><h2 class="sec grow">GST Payment & Returns</h2></div>
+   ${monthStrip(p,gstStat,'gmon')}
+   <p class="small muted" style="margin:-2px 0 12px">Return period <b>${fmtMonth(p)}</b>, due in ${fmtMonth(addMonth(p,1))}. ${qEnd?'Quarter-end month: QRMP quarterly returns are due.':'QRMP: PMT-06 payment is due for this month.'}</p>
    ${body}
-   <div class="note">Due dates standard GST calendar se hain: GSTR-1 11th, GSTR-3B 20th (monthly); QRMP mein PMT-06 25th, GSTR-1 13th aur GSTR-3B 24th (Rajasthan). Date extend ho to "Update" mein due date badal do.</div>`;
+   <div class="note">Due dates follow the standard GST calendar (GSTR-1 11th, GSTR-3B 20th; QRMP PMT-06 25th, GSTR-1 13th, GSTR-3B 24th for Rajasthan). If a date is extended, change it in Settings for every month, or tap "Update" to change it for one return.</div>`;
 }
 
 function targetItem(t){
   return `<div class="item ${t.done?'done stripe-ok':''}">
     <button class="chk ${t.done?'on':''}" data-act="ttoggle" data-id="${esc(t.id)}" aria-label="${t.done?'Mark not done':'Mark done'}">${t.done?ic('check'):''}</button>
-    <div class="body"><div class="t">${esc(t.title)}</div>${t.assignee?`<div class="meta"><span>👤 ${esc(t.assignee)}</span></div>`:''}</div>
-    <button class="btn ghost sm" data-act="tedit" data-id="${esc(t.id)}">Edit</button></div>`;
+    <div class="body"><div class="t">${esc(t.title)}</div><div class="meta">${t.assignee?`<span>Assigned: ${esc(t.assignee)}</span>`:''}${editedLine(t)}</div></div>
+    <button class="btn ghost sm" data-act="tedit" data-id="${esc(t.id)}">${ic('edit')}Edit</button></div>`;
 }
 function vDaily(){
-  const d=U.dDate;
-  const T=S.tasks.filter(t=>t.kind==='target'&&t.date===d).sort((a,b)=>(a.done-b.done)||(a.at||0)-(b.at||0));
+  const d=U.dDate, st=ST();
+  const T=all('tasks').filter(t=>t.kind==='target'&&t.date===d).sort((a,b)=>(a.done-b.done)||(a.at||0)-(b.at||0));
   const done=T.filter(t=>t.done).length, pct=T.length?Math.round(done/T.length*100):0;
-  const prevOpen=S.tasks.filter(t=>t.kind==='target'&&t.date<d&&!t.done&&t.date>=addDay(d,-7));
-  const L=S.log.filter(l=>l.date===d).sort((a,b)=>(a.at||0)-(b.at||0));
+  const prevOpen=all('tasks').filter(t=>t.kind==='target'&&t.date<d&&!t.done&&t.date>=addDay(d,-7));
+  const L=all('log').filter(l=>l.date===d).sort((a,b)=>(a.at||0)-(b.at||0));
   const hrs=L.reduce((s,l)=>s+(+l.hours||0),0);
   return `<div class="bar"><h2 class="sec grow">Daily Target & Tracker</h2>
-     <button class="btn ghost sm" data-act="dday" data-k="-1" aria-label="Previous day">${ic('l','width="16" height="16"')}</button>
+     <button class="btn ghost sm" data-act="dday" data-k="-1" aria-label="Previous day">${ic('l')}</button>
      <input type="date" class="inp mini" id="dDate" value="${d}" aria-label="Date">
-     <button class="btn ghost sm" data-act="dday" data-k="1" aria-label="Next day">${ic('r','width="16" height="16"')}</button>
-     ${d!==today()?'<button class="btn gold sm" data-act="dtoday">Aaj</button>':''}</div>
+     <button class="btn ghost sm" data-act="dday" data-k="1" aria-label="Next day">${ic('r')}</button>
+     ${d!==today()?'<button class="btn gold sm" data-act="dtoday">Today</button>':''}</div>
    <div class="grid g2">
     <div class="card">
       <div class="panel-title"><div><h3>Daily target</h3><div class="small muted">${fmtDate(d)} · ${done} of ${T.length} done</div></div><div class="ring" style="--p:${pct}"><span>${pct}%</span></div></div>
-      <div class="list">${T.map(targetItem).join('')||'<div class="empty">Is din ka koi target nahi. Neeche add karo.</div>'}</div>
-      <form class="addrow" data-form="tadd"><input class="inp" id="tTitle" placeholder="Naya target, e.g. Cash vouching Nov 1–10" required><input class="inp" id="tWho" placeholder="Kaun karega" style="flex:0 1 130px" list="people"><button class="btn">${ic('plus','width="15" height="15"')}Add</button></form>
-      ${prevOpen.length?`<div class="note">Pichhle 7 din ke ${prevOpen.length} target pending hain. <button class="btn sm gold" data-act="tcarry" style="margin-left:6px">Aaj mein laao</button></div>`:''}
+      <div class="list">${T.map(targetItem).join('')||'<div class="empty">No targets for this day. Add one below.</div>'}</div>
+      <form class="addrow" data-form="tadd"><input class="inp" id="tTitle" placeholder="New target, e.g. Cash vouching 1–10 Nov" required aria-label="New target"><input class="inp" id="tWho" placeholder="Assigned to" style="flex:0 1 130px" list="people" aria-label="Assigned to"><button class="btn">${ic('plus')}Add</button></form>
+      ${prevOpen.length?`<div class="note">${prevOpen.length} target(s) from the last 7 days are still open. <button class="btn sm gold" data-act="tcarry" style="margin-left:6px">Move to this day</button></div>`:''}
     </div>
     <div class="card">
-      <div class="panel-title"><div><h3>Daily tracker</h3><div class="small muted">Kya kaam hua · ${L.length} entries · ${hrs} hrs</div></div></div>
-      <div class="list">${L.map(l=>`<div class="item clickable" data-act="ledit" data-id="${esc(l.id)}"><div class="body"><div class="t">${esc(l.work)}</div><div class="meta">${l.name?`<span>👤 ${esc(l.name)}</span>`:''}${l.hours?`<span class="chip c-info">${esc(l.hours)} hr</span>`:''}</div></div></div>`).join('')||'<div class="empty">Aaj ka kaam yahan log karo.</div>'}</div>
-      <form class="addrow" data-form="ladd"><input class="inp" id="lWork" placeholder="Kaam jo kiya, e.g. Zomato settlement match" required><input class="inp" id="lName" placeholder="Naam" style="flex:0 1 110px" list="people"><input class="inp" id="lHrs" type="number" step="0.25" min="0" placeholder="Hrs" style="flex:0 1 80px"><button class="btn">${ic('plus','width="15" height="15"')}Log</button></form>
+      <div class="panel-title"><div><h3>Daily tracker</h3><div class="small muted">Work done · ${L.length} entries · ${hrs} hrs</div></div></div>
+      <div class="list">${L.map(l=>`<div class="item clickable" data-act="ledit" data-id="${esc(l.id)}"><div class="body"><div class="t">${esc(l.work)}</div><div class="meta">${l.name?`<span>${esc(l.name)}</span>`:''}${l.place?`<span class="chip">${esc(l.place)}</span>`:''}${l.hours?`<span class="chip c-info">${esc(l.hours)} hr</span>`:''}</div></div></div>`).join('')||'<div class="empty">Log the work done on this day here.</div>'}</div>
+      <form class="addrow" data-form="ladd"><input class="inp" id="lWork" placeholder="Work done, e.g. Zomato settlement matched" required aria-label="Work done">
+        <select class="inp" id="lPlace" style="flex:0 1 130px" aria-label="Place">${st.places.map(p=>`<option>${esc(p)}</option>`).join('')}</select>
+        <input class="inp" id="lHrs" type="number" step="0.25" min="0" placeholder="Hrs" style="flex:0 1 80px" aria-label="Hours"><button class="btn">${ic('plus')}Log</button></form>
     </div>
    </div>${peopleList()}`;
 }
@@ -515,190 +605,303 @@ function taskItem(t){
    <button class="chk ${done?'on':''}" data-act="ptoggle" data-id="${esc(t.id)}" aria-label="${done?'Reopen':'Mark done'}">${done?ic('check'):''}</button>
    <div class="body"><div class="t">${esc(t.title)}</div>
    ${t.notes?`<div class="desc small muted">${esc(t.notes)}</div>`:''}
-   <div class="meta">${priChip(t.priority)}${t.status==='In progress'?statusChip('In progress'):''}${t.kind==='misc'?'<span class="chip">Misc</span>':''}${t.assignee?`<span>👤 ${esc(t.assignee)}</span>`:''}${t.due?`<span class="due">Due ${fmtDate(t.due)}</span>${dueChip(t.due,done)}`:''}</div></div></div>`;
+   <div class="meta">${priChip(t.priority)}${t.status==='In progress'?statusChip('In progress'):''}${t.kind==='misc'?'<span class="chip">Misc</span>':''}${t.assignee?`<span>Assigned: ${esc(t.assignee)}</span>`:''}${t.due?`<span class="due">Due ${fmtDate(t.due)}</span>${dueChip(t.due,done)}`:''}</div>
+   <div class="meta">${editedLine(t)}</div></div></div>`;
 }
 function vTodo(){
-  let L=S.tasks.filter(t=>t.kind===U.pKind);
+  let L=all('tasks').filter(t=>t.kind===U.pKind);
   const openN=L.filter(t=>t.status!=='Done').length;
   L=U.pShow==='open'?L.filter(t=>t.status!=='Done').sort(sortTasks):L.filter(t=>t.status==='Done').sort((a,b)=>(b.at||0)-(a.at||0));
-  const cnt=k=>S.tasks.filter(t=>t.kind===k&&t.status!=='Done').length;
-  return `<div class="bar"><h2 class="sec grow">To-Do</h2><button class="btn" data-act="padd">${ic('plus','width="16" height="16"')}Add ${U.pKind==='misc'?'misc work':'pendency'}</button></div>
+  const cnt=k=>all('tasks').filter(t=>t.kind===k&&t.status!=='Done').length;
+  return `<div class="bar"><h2 class="sec grow">To-Do</h2><button class="btn" data-act="padd">${ic('plus')}Add ${U.pKind==='misc'?'misc work':'pendency'}</button></div>
    <div class="bar"><div class="seg"><button data-act="pkind" data-v="pendency" class="${U.pKind==='pendency'?'on':''}">Other pendency (${cnt('pendency')})</button><button data-act="pkind" data-v="misc" class="${U.pKind==='misc'?'on':''}">Miscellaneous (${cnt('misc')})</button></div>
    <div class="seg"><button data-act="pshow" data-v="open" class="${U.pShow==='open'?'on':''}">Open ${openN}</button><button data-act="pshow" data-v="done" class="${U.pShow==='done'?'on':''}">Done</button></div></div>
-   <div class="list">${L.map(taskItem).join('')||`<div class="empty">${U.pShow==='open'?'Sab clear hai. Nayi pendency "Add" se daalo.':'Abhi tak kuch complete nahi hua.'}</div>`}</div>`;
+   <div class="list">${L.map(taskItem).join('')||`<div class="empty">${U.pShow==='open'?'All clear. Tap "Add" to add pendency.':'Nothing completed yet.'}</div>`}</div>`;
 }
+
+/* ---------- Settings ---------- */
+function vSettings(){
+  const st=ST();
+  const delItems=[];COLS.forEach(c=>Object.values(S[c]).forEach(o=>{if(o.deleted)delItems.push({c,o})}));
+  delItems.sort((a,b)=>(b.o.at||0)-(a.o.at||0));
+  const delLabel=(c,o)=>c==='observations'?`Observation: ${o.text}`:c==='tasks'?`${o.kind==='target'?'Target':'To-do'}: ${o.title}`:c==='log'?`Tracker: ${o.work}`:c==='vouching'?`${o.type} vouching ${fmtMonth(o.period)}`:c==='gst'?`${o.form} ${fmtMonth(o.period)}`:c;
+  const sh=S.settings.main;
+  return `<div class="bar"><h2 class="sec grow">Settings</h2>${sh&&sh.hist?histBtn('settings','main'):''}</div>
+  <div class="grid g2">
+   <div class="card setsec"><h3>You</h3>
+     <div class="kv"><span>Signed in as</span><b>${esc(me)||'–'}</b></div>
+     <div class="vfoot"><button class="btn ghost sm" data-act="switch">Switch user</button></div>
+     <p class="small muted">Your name is saved with every change, so the team can see who updated what.</p>
+   </div>
+   <div class="card setsec"><h3>Team PIN</h3><p class="help">Everyone needs this PIN to open the tracker. Changing it asks everyone to enter the new PIN.</p>
+     <div class="addrow" style="margin-top:0"><input class="inp" id="sPin" value="${esc(st.pin)}" inputmode="numeric" aria-label="Team PIN"><button class="btn" data-act="spin">Save PIN</button></div>
+   </div>
+   <div class="card setsec"><h3>Lists</h3><p class="help">One item per line. These lists fill the drop-downs and outlet buttons.</p>
+     <div class="form">
+       <div class="field"><label for="sTeam">Team members</label><textarea class="inp" id="sTeam">${esc(st.team.join('\n'))}</textarea></div>
+       <div class="field"><label for="sOut">Outlets</label><textarea class="inp" id="sOut">${esc(st.outlets.join('\n'))}</textarea></div>
+       <div class="field"><label for="sCats">Observation categories</label><textarea class="inp" id="sCats" style="min-height:150px">${esc(st.oCats.join('\n'))}</textarea></div>
+       <div class="field"><label for="sPlaces">Work places (daily tracker)</label><textarea class="inp" id="sPlaces">${esc(st.places.join('\n'))}</textarea></div>
+     </div>
+     <div class="vfoot"><button class="btn" data-act="slists">Save lists</button></div>
+   </div>
+   <div class="card setsec"><h3>Vouching types</h3><p class="help">Tick "Outlet-wise" to track that vouching separately for each outlet.</p>
+     <div id="vtRows">${st.vTypes.map(v=>vtRow(v.name,v.ow)).join('')}</div>
+     <div class="vfoot"><button class="btn ghost sm" data-act="vtadd">${ic('plus')}Add type</button><span class="grow"></span><button class="btn" data-act="svt">Save types</button></div>
+   </div>
+   <div class="card setsec"><h3>GST entities</h3><p class="help">Monthly = GSTR-1 and GSTR-3B every month. QRMP = PMT-06 in the first two months, returns at quarter end.</p>
+     <div id="entRows">${st.ents.map(e=>entRow(e)).join('')}</div>
+     <div class="vfoot"><button class="btn ghost sm" data-act="entadd">${ic('plus')}Add entity</button><span class="grow"></span><button class="btn" data-act="sents">Save entities</button></div>
+   </div>
+   <div class="card setsec"><h3>GST due days</h3><p class="help">Day of the following month. Change it here when the government extends a date for all months.</p>
+     <div class="duegrid">${[['m1','GSTR-1 (monthly)'],['m3b','GSTR-3B (monthly)'],['pmt','PMT-06 (QRMP)'],['q1','GSTR-1 (QRMP)'],['q3b','GSTR-3B (QRMP)']].map(([k,l])=>`<div class="field"><label for="d_${k}">${l}</label><input class="inp" id="d_${k}" type="number" min="1" max="31" value="${esc(st.due[k])}"></div>`).join('')}</div>
+     <div class="vfoot"><button class="btn" data-act="sdue">Save due days</button></div>
+   </div>
+   <div class="card setsec"><h3>Backup & export</h3><p class="help">Download a full backup now and then, and keep it safe. Excel files open the lists as spreadsheets.</p>
+     <div class="vfoot">
+       <button class="btn" data-act="backup">Download backup</button>
+       <button class="btn ghost" data-act="restoreFile">Restore from backup</button>
+     </div>
+     <div class="vfoot">
+       <button class="btn ghost sm" data-act="csv" data-k="observations">Observations (Excel)</button>
+       <button class="btn ghost sm" data-act="csv" data-k="gst">GST (Excel)</button>
+       <button class="btn ghost sm" data-act="csv" data-k="vouching">Vouching (Excel)</button>
+       <button class="btn ghost sm" data-act="csv" data-k="tasks">Targets & to-do (Excel)</button>
+       <button class="btn ghost sm" data-act="csv" data-k="log">Daily tracker (Excel)</button>
+     </div>
+   </div>
+   <div class="card setsec"><h3>Deleted items</h3><p class="help">Deleted entries stay here so they can be brought back.</p>
+     <div class="list">${delItems.slice(0,40).map(({c,o})=>`<div class="item"><div class="body"><div class="t">${esc(delLabel(c,o))}</div><div class="meta">${editedLine(o)}</div></div><button class="btn ghost sm" data-act="restore" data-col="${c}" data-id="${esc(o.id)}">Restore</button></div>`).join('')||'<div class="empty">Nothing deleted.</div>'}</div>
+   </div>
+  </div>`;
+}
+const vtRow=(n,ow)=>`<div class="rowed"><input class="inp vtN" value="${esc(n)}" placeholder="e.g. Sales" aria-label="Vouching type"><label class="tick"><input type="checkbox" class="vtO" ${ow?'checked':''}>Outlet-wise</label><button class="btn danger sm" data-act="rowdel" aria-label="Remove">✕</button></div>`;
+const entRow=e=>`<div class="rowed" data-key="${esc(e.key||'')}"><input class="inp enN" value="${esc(e.name||'')}" placeholder="Entity name" aria-label="Entity name"><select class="inp enF" style="flex:0 0 112px" aria-label="Frequency"><option value="M" ${e.freq==='M'?'selected':''}>Monthly</option><option value="Q" ${e.freq==='Q'?'selected':''}>QRMP</option></select><button class="btn danger sm" data-act="rowdel" aria-label="Remove">✕</button></div>`;
+const lines=id=>$(id).value.split('\n').map(s=>s.trim()).filter(Boolean).filter((v,i,a)=>a.indexOf(v)===i);
+async function saveSettings(patch,msg){const cur=S.settings.main||{};if(await save('settings','main',{...clone(cur),...patch}))toast(msg||'Settings saved')}
+
 function people(){
-  const s=new Set();
-  S.tasks.forEach(t=>t.assignee&&s.add(t.assignee));S.observations.forEach(o=>o.assignee&&s.add(o.assignee));
-  S.log.forEach(l=>l.name&&s.add(l.name));Object.values(S.vouching).forEach(v=>v.assignee&&s.add(v.assignee));
+  const s=new Set(ST().team);
+  all('tasks').forEach(t=>t.assignee&&s.add(t.assignee));all('observations').forEach(o=>o.assignee&&s.add(o.assignee));
+  all('log').forEach(l=>l.name&&s.add(l.name));all('vouching').forEach(v=>v.assignee&&s.add(v.assignee));
   return [...s].sort();
 }
 const peopleList=()=>`<datalist id="people">${people().map(p=>`<option value="${esc(p)}">`).join('')}</datalist>`;
 
-/* ---------- modal form ---------- */
+/* ================= MODAL ================= */
 let MF=null;
 function openForm(cfg){
-  MF=cfg; const d=cfg.data||{};
+  MF=cfg;const d=cfg.data||{};
   const f=cfg.fields.map(x=>{
-    const v=d[x.k]==null?(x.def??''):d[x.k]; const id='f_'+x.k;
-    let ctl;
-    if(x.type==='select')ctl=`<select class="inp" id="${id}">${x.options.map(o=>`<option ${String(v)===o?'selected':''}>${esc(o)}</option>`).join('')}</select>`;
+    const v=d[x.k]==null?(x.def==null?'':x.def):d[x.k];const id='f_'+x.k;let ctl;
+    if(x.type==='select')ctl=`<select class="inp" id="${id}">${x.options.map(o=>{const[val,lab]=Array.isArray(o)?o:[o,o||'—'];return`<option value="${esc(val)}" ${String(v)===String(val)?'selected':''}>${esc(lab)}</option>`}).join('')}</select>`;
     else if(x.type==='textarea')ctl=`<textarea class="inp" id="${id}" ${x.req?'required':''} placeholder="${esc(x.ph||'')}">${esc(v)}</textarea>`;
     else ctl=`<input class="inp" id="${id}" type="${x.type||'text'}" value="${esc(v)}" ${x.req?'required':''} ${x.type==='number'?'step="any"':''} ${x.list?'list="people"':''} placeholder="${esc(x.ph||'')}">`;
     return `<div class="field ${x.full?'full':''}"><label for="${id}">${esc(x.label)}</label>${ctl}</div>`;
   }).join('');
   $('#sheet').innerHTML=`<h3>${esc(cfg.title)}</h3>${cfg.sub?`<p class="small muted" style="margin:-6px 0 12px">${esc(cfg.sub)}</p>`:''}
    <form id="mform"><div class="form">${f}</div>
+   ${cfg.histCol&&d.hist?`<div class="vfoot" style="margin-top:10px">${histBtn(cfg.histCol,cfg.histId)}<span class="grow"></span>${editedLine(d)}</div>`:''}
    <div class="foot">${cfg.onDelete?'<button type="button" class="btn danger sm" data-act="mdel">Delete</button>':''}<span class="grow"></span><button type="button" class="btn ghost" data-act="mclose">Cancel</button><button class="btn" id="msave">Save</button></div></form>${peopleList()}`;
   $('#modal').classList.remove('hidden');
   setTimeout(()=>{const el=$('#sheet .inp');el&&el.focus()},50);
 }
+function openSheet(html){MF=null;$('#sheet').innerHTML=html;$('#modal').classList.remove('hidden')}
 function closeForm(){$('#modal').classList.add('hidden');MF=null}
 function formVals(){const o={};MF.fields.forEach(x=>{let v=$('#f_'+x.k).value;if(x.type==='number')v=v===''?'':Number(v);o[x.k]=typeof v==='string'?v.trim():v});return o}
+function showHist(col,id){
+  const o=S[col][id];const H=(o&&o.hist)||[];
+  openSheet(`<h3>Change history</h3><p class="small muted" style="margin:-6px 0 12px">Newest first. "Undo" puts back the values from before that change.</p>
+   <div class="hist">${H.map((h,i)=>`<div class="h"><div class="hh"><b>${esc(h.by)}</b><span class="muted">${esc(h.note)} · ${fmtTime(h.at)}</span><span class="grow"></span>${h.prev&&h.ch&&h.ch.length?`<button class="btn ghost sm" data-act="undo" data-col="${col}" data-id="${esc(id)}" data-i="${i}">Undo</button>`:''}</div>
+     ${(h.ch||[]).filter(c=>c.f!=='deleted').map(c=>`<div class="ch">${chText(c)}</div>`).join('')}</div>`).join('')||'<div class="empty">No changes recorded yet.</div>'}</div>
+   <div class="foot"><span class="grow"></span><button class="btn" data-act="mclose">Close</button></div>`);
+}
+function confirmSheet(msg,okLabel,fn){
+  openSheet(`<h3>Please confirm</h3><p>${msg}</p><div class="foot"><span class="grow"></span><button class="btn ghost" data-act="mclose">Cancel</button><button class="btn" id="cOk">${esc(okLabel)}</button></div>`);
+  $('#cOk').onclick=async()=>{closeForm();await fn()};
+}
 
-/* ---------- actions ---------- */
-const O=id=>S.observations.find(o=>o.id===id);
-const T=id=>S.tasks.find(t=>t.id===id);
-const strip=d=>{const{id,...r}=d;return r};
-
+/* ================= FORMS ================= */
+const O=id=>S.observations[id], T=id=>S.tasks[id];
 function obsForm(o,defArea){
-  openForm({title:o?'Observation edit':'Nayi observation',
-    data:o||{date:today(),area:defArea||'Sales',status:'Open',cat:defArea==='Sales'?'DP/SS':'Other'},
-    fields:[{k:'area',label:'Vouching area',type:'select',options:OAREAS},{k:'cat',label:'Category',type:'select',options:OCATS},
-      {k:'date',label:'Date',type:'date'},{k:'vno',label:'Voucher / Bill no.',ph:'e.g. SV/1123'},
-      {k:'amount',label:'Amount (₹)',type:'number'},{k:'status',label:'Status',type:'select',options:OSTAT},
-      {k:'text',label:'Observation',type:'textarea',full:true,req:true,ph:'Kya galat mila / kya missing hai'},
-      {k:'action',label:'Action / client reply',type:'textarea',full:true},{k:'assignee',label:'Assigned to',list:true,full:true}],
-    onSave:v=>write('observations',o&&o.id,{...(o?strip(o):{}),...v}),
-    onDelete:o?()=>remove('observations',o.id):null});
+  const st=ST();
+  openForm({title:o?'Edit observation':'New observation',histCol:'observations',histId:o&&o.id,
+    data:o||{date:today(),area:defArea||'Sales',status:'Open',cat:(defArea||'Sales')==='Sales'?st.oCats[0]:'Other'},
+    fields:[{k:'area',label:'Vouching area',type:'select',options:OAREAS()},{k:'cat',label:'Category',type:'select',options:st.oCats},
+      {k:'outlet',label:'Outlet',type:'select',options:['',...st.outlets]},{k:'date',label:'Date',type:'date'},
+      {k:'vno',label:'Voucher / bill no.',ph:'e.g. SV/1123'},{k:'amount',label:'Amount (₹)',type:'number'},
+      {k:'text',label:'Observation',type:'textarea',full:true,req:true,ph:'What is wrong or missing'},
+      {k:'action',label:'Action / client reply',type:'textarea',full:true},
+      {k:'status',label:'Status',type:'select',options:OSTAT},{k:'assignee',label:'Assigned to',list:true}],
+    onSave:v=>save('observations',o&&o.id,{...(o?clone(o):{}),...v}),
+    onDelete:o?()=>softDelete('observations',o.id):null});
 }
 function taskForm(t,kind){
   const k=t?t.kind:kind;
-  openForm({title:t?'Edit':(k==='misc'?'Misc work add karo':'Pendency add karo'),
-    data:t||{priority:'Medium',status:'Pending'},
-    fields:[{k:'title',label:'Kaam',full:true,req:true,ph:'e.g. TDS 26Q data collect karna'},{k:'assignee',label:'Assigned to',list:true},{k:'due',label:'Due date',type:'date'},
+  openForm({title:t?'Edit '+(k==='misc'?'misc work':'pendency'):(k==='misc'?'Add misc work':'Add pendency'),histCol:'tasks',histId:t&&t.id,
+    data:t||{priority:'Medium',status:'Pending',kind:k},
+    fields:[{k:'title',label:'Task',full:true,req:true,ph:'e.g. Collect TDS 26Q data'},{k:'assignee',label:'Assigned to',list:true},{k:'due',label:'Due date',type:'date'},
       {k:'priority',label:'Priority',type:'select',options:PRI},{k:'status',label:'Status',type:'select',options:TSTAT},
-      {k:'kind',label:'Type',type:'select',options:['pendency','misc'],def:k},{k:'notes',label:'Notes',type:'textarea',full:true}],
-    onSave:v=>write('tasks',t&&t.id,{...(t?strip(t):{}),...v}),
-    onDelete:t?()=>remove('tasks',t.id):null});
+      {k:'kind',label:'List',type:'select',options:[['pendency','Other pendency'],['misc','Miscellaneous']]},{k:'notes',label:'Notes',type:'textarea',full:true}],
+    onSave:v=>save('tasks',t&&t.id,{...(t?clone(t):{}),...v}),
+    onDelete:t?()=>softDelete('tasks',t.id):null});
 }
 
+/* ================= EXPORT ================= */
+function download(name,text,type){const b=new Blob([text],{type});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1000)}
+function csv(rows){return '﻿'+rows.map(r=>r.map(v=>{v=v==null?'':String(v);return/[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v}).join(',')).join('\r\n')}
+function exportCsv(k){
+  let rows;const stamp=today();
+  if(k==='observations')rows=[['Date','Area','Category','Outlet','Voucher no.','Amount','Observation','Action','Status','Assigned to','Last updated by']].concat(all('observations').sort((a,b)=>(a.date||'').localeCompare(b.date||'')).map(o=>[o.date,o.area,o.cat,o.outlet,o.vno,o.amount,o.text,o.action,o.status,o.assignee,o.by]));
+  if(k==='gst'){rows=[['Entity','Return','Period','Due date','Status','Amount','ARN / challan','Done on','Remarks','Last updated by']];
+    const ps=new Set(all('gst').map(g=>g.period));ps.add(addMonth(curMonth(),-1));[...ps].sort().forEach(p=>gstRows(p).forEach(r=>rows.push([r.ent.name,r.form,fmtMonth(p),r.due,r.status,r.doc.amount,r.doc.ref,r.doc.doneOn,r.doc.remarks,r.doc.by])))}
+  if(k==='vouching'){rows=[['Month','Type','Status','Outlets','Total vouchers','Checked','Period covered','Assigned to','Remarks']];
+    const st=ST();all('vouching').sort((a,b)=>(a.period||'').localeCompare(b.period||'')).forEach(d=>{const t=st.vTypes.find(x=>x.name===d.type)||{name:d.type};rows.push([fmtMonth(d.period),d.type,vStatus(t,d),Object.entries(d.outlets||{}).map(([o,s])=>o+': '+s).join('; '),d.total,d.checked,d.range,d.assignee,d.remarks])})}
+  if(k==='tasks')rows=[['List','Task','Date / due','Assigned to','Priority','Status','Notes']].concat(all('tasks').map(t=>[t.kind==='target'?'Daily target':t.kind==='misc'?'Miscellaneous':'Other pendency',t.title,t.kind==='target'?t.date:t.due,t.assignee,t.priority,t.kind==='target'?(t.done?'Done':'Pending'):t.status,t.notes]));
+  if(k==='log')rows=[['Date','Name','Work','Place','Hours']].concat(all('log').sort((a,b)=>(a.date||'').localeCompare(b.date||'')).map(l=>[l.date,l.name,l.work,l.place,l.hours]));
+  download(`DMB_${k}_${stamp}.csv`,csv(rows),'text/csv;charset=utf-8');
+}
+
+/* ================= EVENTS ================= */
 document.addEventListener('click',async e=>{
-  const el=e.target.closest('[data-act]'); if(!el)return;
+  const el=e.target.closest('[data-act]');if(!el)return;
   const a=el.dataset.act, id=el.dataset.id;
-  if(a!=='vedit'&&a!=='oedit'&&a!=='pedit'&&a!=='ledit')e.stopPropagation();
   switch(a){
    case 'mclose':closeForm();break;
-   case 'mdel':
-     if(el.dataset.sure){const fn=MF.onDelete;closeForm();if(await fn())toast('Delete ho gaya')}
-     else{el.dataset.sure='1';el.textContent='Pakka delete?'}
-     break;
-   case 'vmon':U.vPeriod=addMonth(U.vPeriod,+el.dataset.k);render();break;
-   case 'gmon':U.gPeriod=addMonth(U.gPeriod,+el.dataset.k);render();break;
+   case 'mdel':if(el.dataset.sure){const fn=MF.onDelete;closeForm();await fn()}else{el.dataset.sure='1';el.textContent='Tap again to delete'}break;
+   case 'hist':showHist(el.dataset.col,id);break;
+   case 'undo':closeForm();await undo(el.dataset.col,id,+el.dataset.i);break;
+   case 'restore':await restore(el.dataset.col,id);break;
+   case 'vmon':U.vPeriod=el.dataset.p||addMonth(U.vPeriod,+el.dataset.k);render();break;
+   case 'gmon':U.gPeriod=el.dataset.p||addMonth(U.gPeriod,+el.dataset.k);render();break;
    case 'dday':U.dDate=addDay(U.dDate,+el.dataset.k);render();break;
    case 'dtoday':U.dDate=today();render();break;
+   case 'vout':{
+     const t=el.dataset.t,o=el.dataset.o,did=vId(t,U.vPeriod),d=clone(S.vouching[did]||{type:t,period:U.vPeriod});
+     d.outlets=d.outlets||{};const cur=d.outlets[o]||'Not started';d.outlets[o]=VSTAT[(VSTAT.indexOf(cur)+1)%3];
+     await save('vouching',did,d);break;}
    case 'vedit':{
-     const t=el.dataset.t, did=`${t}__${U.vPeriod}`, d=S.vouching[did];
-     openForm({title:`${t} Vouching`,sub:fmtMonth(U.vPeriod),data:d||{status:'Not started'},
-       fields:[{k:'status',label:'Status',type:'select',options:VSTAT},{k:'assignee',label:'Assigned to',list:true},
+     const t=el.dataset.t,tt=ST().vTypes.find(x=>x.name===t)||{},did=vId(t,U.vPeriod),d=S.vouching[did];
+     const fields=[...(tt.ow&&ST().outlets.length?[]:[{k:'status',label:'Status',type:'select',options:VSTAT}]),{k:'assignee',label:'Assigned to',list:true},
          {k:'total',label:'Total vouchers',type:'number'},{k:'checked',label:'Vouchers checked',type:'number'},
-         {k:'range',label:'Period covered',ph:'e.g. 1–15 Nov',full:true},{k:'remarks',label:'Remarks',type:'textarea',full:true}],
-       onSave:v=>write('vouching',did,{type:t,period:U.vPeriod,...(d?strip(d):{}),...v})});
+         {k:'range',label:'Period covered',ph:'e.g. 1–15 Nov',full:true},{k:'remarks',label:'Remarks',type:'textarea',full:true}];
+     openForm({title:`${t} Vouching`,sub:fmtMonth(U.vPeriod)+(tt.ow?' · outlet status is set with the outlet buttons':''),data:d||{status:'Not started'},histCol:'vouching',histId:did,
+       fields,onSave:v=>save('vouching',did,{type:t,period:U.vPeriod,...(d?clone(d):{}),...v})});
      break;}
    case 'oadd':obsForm(null,el.dataset.area||(U.obsArea!=='All'?U.obsArea:'Sales'));break;
    case 'oedit':obsForm(O(id));break;
-   case 'oresolve':{const o=O(id);if(o&&await write('observations',id,{...strip(o),status:'Resolved'}))toast('Resolved mark ho gaya');break;}
-   case 'ojump':U.obsArea='Sales';U.obsCat=el.dataset.cat;U.obsStat='All';location.hash='observations';break;
+   case 'oresolve':{e.stopPropagation();const o=O(id);if(o&&await save('observations',id,{...clone(o),status:'Resolved'}))toast('Marked as resolved');break;}
+   case 'ojump':U.obsArea='All';U.obsCat=el.dataset.cat;U.obsStat='All';location.hash='observations';break;
    case 'ocat':U.obsCat=el.dataset.v;render();break;
    case 'ostat':U.obsStat=el.dataset.v;render();break;
    case 'gedit':{
      const r=gstRows(U.gPeriod).find(x=>x.id===id);
-     openForm({title:`${r.form} · ${ENT[r.ent].name}`,sub:`Period ${fmtMonth(r.period)} · ${r.kind}`,
+     openForm({title:`${r.form} · ${r.ent.name}`,sub:`Period ${fmtMonth(r.period)} · ${r.kind}`,histCol:'gst',histId:id,
        data:{...r.doc,status:r.status,due:r.due},
        fields:[{k:'status',label:'Status',type:'select',options:GSTAT},{k:'due',label:'Due date',type:'date'},
          {k:'amount',label:'Tax paid (₹)',type:'number'},{k:'doneOn',label:'Filed / paid on',type:'date'},
-         {k:'ref',label:'ARN / Challan no. (CPIN/CIN)',full:true},{k:'remarks',label:'Remarks',type:'textarea',full:true}],
-       onSave:v=>write('gst',id,{ent:r.ent,form:r.form,period:r.period,...strip(r.doc),...v,doneOn:v.doneOn||((v.status==='Filed'||v.status==='Paid')&&!r.doc.doneOn?today():v.doneOn)})});
+         {k:'ref',label:'ARN / challan no. (CPIN / CIN)',full:true},{k:'remarks',label:'Remarks',type:'textarea',full:true}],
+       onSave:v=>{if((v.status==='Filed'||v.status==='Paid')&&!v.doneOn)v.doneOn=today();if(v.due===r.due&&!r.doc.due)delete v.due;
+         return save('gst',id,{ent:r.ent.key,form:r.form,period:r.period,...clone(r.doc),...v})}});
      break;}
-   case 'ttoggle':{const t=T(id);if(t)await write('tasks',id,{...strip(t),done:!t.done});break;}
-   case 'tedit':{const t=T(id);openForm({title:'Target edit',data:t,
-       fields:[{k:'title',label:'Target',full:true,req:true},{k:'assignee',label:'Kaun karega',list:true},{k:'date',label:'Date',type:'date'}],
-       onSave:v=>write('tasks',id,{...strip(t),...v}),onDelete:()=>remove('tasks',id)});break;}
+   case 'ttoggle':{const t=T(id);if(t)await save('tasks',id,{...clone(t),done:!t.done});break;}
+   case 'tedit':{const t=T(id);openForm({title:'Edit target',data:t,histCol:'tasks',histId:id,
+       fields:[{k:'title',label:'Target',full:true,req:true},{k:'assignee',label:'Assigned to',list:true},{k:'date',label:'Date',type:'date'}],
+       onSave:v=>save('tasks',id,{...clone(t),...v}),onDelete:()=>softDelete('tasks',id)});break;}
    case 'tcarry':{
-     const L=S.tasks.filter(t=>t.kind==='target'&&t.date<U.dDate&&!t.done&&t.date>=addDay(U.dDate,-7));
-     for(const t of L){if(!await write('tasks',t.id,{...strip(t),date:U.dDate}))break}
-     toast(`${L.length} target aaj mein shift ho gaye`);break;}
-   case 'ledit':{const l=S.log.find(x=>x.id===id);openForm({title:'Tracker entry',data:l,
-       fields:[{k:'work',label:'Kaam',type:'textarea',full:true,req:true},{k:'name',label:'Naam',list:true},{k:'hours',label:'Hours',type:'number'},{k:'date',label:'Date',type:'date'}],
-       onSave:v=>write('log',id,{...strip(l),...v}),onDelete:()=>remove('log',id)});break;}
+     const L=all('tasks').filter(t=>t.kind==='target'&&t.date<U.dDate&&!t.done&&t.date>=addDay(U.dDate,-7));
+     for(const t of L){if(!await save('tasks',t.id,{...clone(t),date:U.dDate}))break}
+     toast(`${L.length} target(s) moved to ${fmtDate(U.dDate)}`);break;}
+   case 'ledit':{const l=S.log[id];openForm({title:'Edit tracker entry',data:l,histCol:'log',histId:id,
+       fields:[{k:'work',label:'Work done',type:'textarea',full:true,req:true},{k:'name',label:'Name',list:true},{k:'place',label:'Place',type:'select',options:['',...ST().places]},{k:'hours',label:'Hours',type:'number'},{k:'date',label:'Date',type:'date'}],
+       onSave:v=>save('log',id,{...clone(l),...v}),onDelete:()=>softDelete('log',id)});break;}
    case 'padd':taskForm(null,U.pKind);break;
    case 'pedit':taskForm(T(id));break;
-   case 'ptoggle':{const t=T(id);if(t)await write('tasks',id,{...strip(t),status:t.status==='Done'?'Pending':'Done',doneOn:t.status==='Done'?'':today()});break;}
+   case 'ptoggle':{e.stopPropagation();const t=T(id);if(t)await save('tasks',id,{...clone(t),status:t.status==='Done'?'Pending':'Done'});break;}
    case 'pkind':U.pKind=el.dataset.v;render();break;
    case 'pshow':U.pShow=el.dataset.v;render();break;
+   /* settings */
+   case 'switch':ls.set('dmbwt_me','');me='';gate(true);break;
+   case 'spin':{const p=$('#sPin').value.trim();if(p.length<4){toast('Use at least 4 digits');break}await saveSettings({pin:p},'PIN changed');ls.set('dmbwt_pin',p);break;}
+   case 'slists':{const out=lines('#sOut'),cats=lines('#sCats');if(!cats.length){toast('Add at least one category');break}
+     await saveSettings({team:lines('#sTeam'),outlets:out,oCats:cats,places:lines('#sPlaces')},'Lists saved');break;}
+   case 'vtadd':$('#vtRows').insertAdjacentHTML('beforeend',vtRow('',false));break;
+   case 'entadd':$('#entRows').insertAdjacentHTML('beforeend',entRow({freq:'M'}));break;
+   case 'rowdel':el.closest('.rowed').remove();break;
+   case 'svt':{const v=[...document.querySelectorAll('#vtRows .rowed')].map(r=>({name:r.querySelector('.vtN').value.trim(),ow:r.querySelector('.vtO').checked})).filter(x=>x.name);
+     if(!v.length){toast('Add at least one vouching type');break}await saveSettings({vTypes:v},'Vouching types saved');break;}
+   case 'sents':{const used=new Set();const v=[...document.querySelectorAll('#entRows .rowed')].map(r=>{const name=r.querySelector('.enN').value.trim();let key=r.dataset.key||slug(name).slice(0,20);while(used.has(key))key+='1';used.add(key);return{key,name,freq:r.querySelector('.enF').value}}).filter(x=>x.name);
+     if(!v.length){toast('Add at least one entity');break}await saveSettings({ents:v},'GST entities saved');break;}
+   case 'sdue':{const d={};for(const k of ['m1','m3b','pmt','q1','q3b']){const n=+$('#d_'+k).value;if(!(n>=1&&n<=31)){toast('Due days must be between 1 and 31');return}d[k]=n}await saveSettings({due:d},'Due days saved');break;}
+   case 'backup':{const data={};COLS.forEach(c=>data[c]=S[c]);download(`DMB_Tracker_Backup_${today()}.json`,JSON.stringify({app:APP,saved:new Date().toISOString(),data},null,1),'application/json');break;}
+   case 'restoreFile':$('#fileIn').click();break;
+   case 'csv':exportCsv(el.dataset.k);break;
   }
 });
-document.addEventListener('keydown',e=>{
-  if(e.key==='Escape'&&MF)closeForm();
-  if((e.key==='Enter'||e.key===' ')&&e.target.matches('.vcard')){e.preventDefault();e.target.click()}
-});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('#modal').classList.contains('hidden'))closeForm()});
 $('#modal').addEventListener('click',e=>{if(e.target.id==='modal')closeForm()});
 document.addEventListener('change',e=>{
   const t=e.target;
-  if(t.id==='vPeriod'&&t.value){U.vPeriod=t.value;render()}
-  if(t.id==='gPeriod'&&t.value){U.gPeriod=t.value;render()}
   if(t.id==='dDate'&&t.value){U.dDate=t.value;render()}
   if(t.id==='obsArea'){U.obsArea=t.value;render()}
 });
+document.addEventListener('input',e=>{if(e.target.id==='obsQ'){U.obsQ=e.target.value;clearTimeout(U._q);U._q=setTimeout(()=>{render();const q=$('#obsQ');if(q){q.focus();q.setSelectionRange(q.value.length,q.value.length)}},250)}});
+$('#fileIn').addEventListener('change',e=>{
+  const f=e.target.files[0];if(!f)return;const r=new FileReader();
+  r.onload=()=>{let o;try{o=JSON.parse(r.result)}catch(x){toast('This is not a tracker backup file');return}
+    if(!o||o.app!==APP||!o.data){toast('This is not a DMB Work Tracker backup');return}
+    const n=COLS.reduce((s,c)=>s+Object.keys(o.data[c]||{}).length,0);
+    confirmSheet(`Restore ${n} records from the backup of ${esc(String(o.saved||'').slice(0,10))}? Records with the same ID will be replaced; newer records not in the backup stay as they are.`,'Restore',async()=>{
+      let k=0;for(const c of COLS)for(const [id,d] of Object.entries(o.data[c]||{})){const b={...d};delete b.id;try{await db.set(c,id,b);k++}catch(x){fail(x);return}}
+      toast(`${k} records restored`)});
+  };r.readAsText(f);e.target.value='';
+});
 document.addEventListener('submit',async e=>{
-  e.preventDefault();
-  const f=e.target;
-  if(f.closest('.pin'))return;
+  e.preventDefault();const f=e.target;
+  if(f.closest('.gate'))return;
   if(f.id==='mform'){
     const btn=$('#msave');btn.disabled=true;btn.textContent='Saving…';
     const ok=await MF.onSave(formVals());
-    if(ok){closeForm();toast('Save ho gaya ✓')}else{btn.disabled=false;btn.textContent='Save'}
+    if(ok){closeForm();toast('Saved')}else{btn.disabled=false;btn.textContent='Save'}
     return;
   }
-  if(f.dataset.form==='tadd'){
-    const title=$('#tTitle').value.trim();if(!title)return;
-    if(await write('tasks',null,{kind:'target',title,assignee:$('#tWho').value.trim(),date:U.dDate,done:false}))toast('Target add ho gaya');
-  }
-  if(f.dataset.form==='ladd'){
-    const work=$('#lWork').value.trim();if(!work)return;
-    if(await write('log',null,{date:U.dDate,work,name:$('#lName').value.trim(),hours:$('#lHrs').value===''?'':Number($('#lHrs').value)}))toast('Entry log ho gayi');
-  }
+  if(f.dataset.form==='tadd'){const title=$('#tTitle').value.trim();if(!title)return;
+    if(await save('tasks',null,{kind:'target',title,assignee:$('#tWho').value.trim(),date:U.dDate,done:false}))toast('Target added')}
+  if(f.dataset.form==='ladd'){const work=$('#lWork').value.trim();if(!work)return;
+    if(await save('log',null,{date:U.dDate,work,name:me,place:$('#lPlace').value,hours:$('#lHrs').value===''?'':Number($('#lHrs').value)}))toast('Work logged')}
 });
 
-/* ---------- PIN ---------- */
-function pinGate(){
-  if(!TEAM_PIN)return Promise.resolve();
-  try{if(localStorage.getItem('dmbwt_pin')===TEAM_PIN)return Promise.resolve()}catch(e){}
-  return new Promise(res=>{
-    const w=document.createElement('div');w.className='pin';
-    w.innerHTML=`<form class="pinbox"><div class="mono" style="margin:0 auto 10px">DMB</div><h2>DMB Work Tracker</h2><p>Team PIN daalo</p>
-      <input id="pinIn" class="inp" type="password" inputmode="numeric" autocomplete="off" aria-label="Team PIN" style="text-align:center;font-size:20px;letter-spacing:6px">
-      <div id="pinErr" class="small" style="color:var(--bad);min-height:18px;margin-top:6px"></div><button class="btn" style="width:100%;justify-content:center">Open</button></form>`;
-    document.body.appendChild(w);setTimeout(()=>w.querySelector('#pinIn').focus(),50);
-    w.querySelector('form').addEventListener('submit',e=>{e.preventDefault();e.stopPropagation();
-      if(w.querySelector('#pinIn').value===TEAM_PIN){try{localStorage.setItem('dmbwt_pin',TEAM_PIN)}catch(x){}w.remove();res()}
-      else w.querySelector('#pinErr').textContent='PIN galat hai';});
-  });
+/* ================= SIGN-IN ================= */
+function waitSettings(ms){return new Promise(res=>{const t0=Date.now();(function chk(){if(settingsLoaded||Date.now()-t0>ms)res();else setTimeout(chk,150)})()})}
+async function gate(force){
+  await waitSettings(5000);
+  const pin=ST().pin;
+  if(!force&&me&&ls.get('dmbwt_pin')===pin)return;
+  document.querySelectorAll('.gate').forEach(g=>g.remove());
+  const w=document.createElement('div');w.className='gate';
+  w.innerHTML=`<form class="gatebox"><div class="mono" style="margin:0 auto">DMB</div><h2>DMB Work Tracker</h2><p>Enter your name and the team PIN</p>
+    <div class="field"><label for="gName">Your name</label><input id="gName" class="inp" autocomplete="name" list="gPeople" value="${esc(me)}" required></div>
+    <datalist id="gPeople">${ST().team.map(p=>`<option value="${esc(p)}">`).join('')}</datalist>
+    <div class="field"><label for="gPin">Team PIN</label><input id="gPin" class="inp" type="password" inputmode="numeric" autocomplete="off" required style="letter-spacing:4px"></div>
+    <div id="gErr" class="small" style="color:var(--bad);min-height:18px"></div><button class="btn" style="justify-content:center">Open tracker</button></form>`;
+  document.body.appendChild(w);setTimeout(()=>w.querySelector(me?'#gPin':'#gName').focus(),50);
+  return new Promise(res=>w.querySelector('form').addEventListener('submit',ev=>{ev.preventDefault();
+    const n=w.querySelector('#gName').value.trim(),p=w.querySelector('#gPin').value.trim();
+    if(!n){w.querySelector('#gErr').textContent='Enter your name';return}
+    if(p!==ST().pin){w.querySelector('#gErr').textContent='Wrong PIN';return}
+    me=n;ls.set('dmbwt_me',n);ls.set('dmbwt_pin',p);w.remove();render();res()}));
 }
-/* ---------- boot ---------- */
+
+/* ================= BOOT ================= */
 render();
-(async()=>{
-  await pinGate();
+(function(){
   let real=null;
   try{if(CLOUD&&window.firebase)real=fbDb()}catch(e){console.error(e)}
-  db=real||mockDb(); live=!!real;
+  db=real||mockDb();live=!!real;
   setLive(live?'Loading…':(CLOUD?'Offline':'TEST mode'),false);
-  loadTimer=setTimeout(()=>setLive('Data load nahi ho raha, internet check karo',false),10000);
-  subscribe('vouching',a=>{S.vouching={};a.forEach(d=>S.vouching[d.id]=d)});
-  subscribe('observations',a=>S.observations=a);
-  subscribe('gst',a=>{S.gst={};a.forEach(d=>S.gst[d.id]=d)});
-  subscribe('tasks',a=>S.tasks=a);
-  subscribe('log',a=>S.log=a);
+  loadTimer=setTimeout(()=>{settingsLoaded=true;setLive(live?'Cannot reach the server. Check the internet.':'Offline',false)},10000);
+  db.listen(onData,e=>{clearTimeout(loadTimer);settingsLoaded=true;setLive(e&&e.code==='permission-denied'?'Firebase rules are blocking access':'Sync stopped. Reload the page.',false);render()});
+  gate(false);
 })();
 </script>
 </body>
