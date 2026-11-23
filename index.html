@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DMB Work Tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* Layout idea: royal Jaipur mithai-box header (maroon + gold jali), ivory working surface, tab per work-area, bottom nav on phone. Single theme by choice. */
+:root{
+  --maroon:#7A1C2B; --maroon-d:#4B0E18; --gold:#C9A24B; --gold-l:#F4E6BF;
+  --saffron:#D9731A; --ivory:#FAF5EC; --card:#FFFFFF; --ink:#2B1A17; --muted:#7D6A61; --line:#ECDFCC;
+  --ok:#2F7D50; --ok-bg:#E3F2E8; --warn:#B86A00; --warn-bg:#FDF0D9; --bad:#B0281F; --bad-bg:#FBE4E1; --info:#2D5F8A; --info-bg:#E2EDF7;
+  --f-display:"Cormorant Garamond", Georgia, "Times New Roman", serif;
+  --f-body:"Manrope", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--ivory);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.45}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--saffron);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+
+.hero{position:relative;background:linear-gradient(135deg,var(--maroon-d),var(--maroon) 60%,#8E2A33);color:#fff;padding:18px 16px 54px;overflow:hidden}
+.hero::before{content:"";position:absolute;inset:0;opacity:.13;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='44' height='44' viewBox='0 0 44 44'%3E%3Cg fill='none' stroke='%23F4E6BF' stroke-width='1.2'%3E%3Ccircle cx='22' cy='11' r='11'/%3E%3Ccircle cx='22' cy='33' r='11'/%3E%3Ccircle cx='11' cy='22' r='11'/%3E%3Ccircle cx='33' cy='22' r='11'/%3E%3C/g%3E%3C/svg%3E")}
+.hero::after{content:"";position:absolute;left:0;right:0;bottom:0;height:10px;
+  background:repeating-linear-gradient(90deg,var(--gold) 0 14px,transparent 14px 20px);opacity:.55}
+.hero-in{position:relative;max-width:1100px;margin:0 auto;display:flex;align-items:center;gap:14px}
+.mono{flex:none;width:54px;height:54px;border-radius:50%;display:grid;place-items:center;
+  background:radial-gradient(circle at 35% 30%,#F7E7B8,var(--gold) 60%,#9C7A2E);color:var(--maroon-d);
+  font-family:var(--f-display);font-weight:700;font-size:20px;letter-spacing:.5px;box-shadow:0 0 0 3px rgba(244,230,191,.35)}
+.hero h1{margin:0;font-family:var(--f-display);font-size:30px;font-weight:700;line-height:1;letter-spacing:.3px}
+.hero .sub{margin-top:4px;color:var(--gold-l);font-size:12.5px;letter-spacing:.4px}
+.hero .date{margin-left:auto;text-align:right;font-size:12px;color:var(--gold-l)}
+.hero .date b{display:block;font-size:15px;color:#fff}
+.live{display:inline-flex;align-items:center;gap:6px;font-size:11px;margin-top:4px}
+.live i{width:7px;height:7px;border-radius:50%;background:#9be3b4;box-shadow:0 0 0 3px rgba(155,227,180,.25)}
+.live.off i{background:#f5c16c;box-shadow:0 0 0 3px rgba(245,193,108,.25)}
+
+.tabs{position:relative;max-width:1100px;margin:-36px auto 0;padding:0 16px;display:flex;gap:6px;overflow-x:auto;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tabs a{flex:none;display:flex;align-items:center;gap:7px;padding:9px 14px;border-radius:12px 12px 0 0;text-decoration:none;color:var(--gold-l);font-weight:600;font-size:13.5px;background:rgba(255,255,255,.08)}
+.tabs a svg{width:16px;height:16px}
+.tabs a.on{background:var(--ivory);color:var(--maroon)}
+main{max-width:1100px;margin:0 auto;padding:18px 16px 110px}
+
+.bnav{display:none}
+@media (max-width:720px){
+  .tabs{display:none}
+  .hero{padding-bottom:22px}
+  .hero h1{font-size:25px}
+  main{padding-top:16px}
+  .bnav{display:grid;grid-template-columns:repeat(6,1fr);position:fixed;left:0;right:0;bottom:0;z-index:20;background:#fff;border-top:1px solid var(--line);padding:6px 4px calc(6px + env(safe-area-inset-bottom));box-shadow:0 -6px 18px rgba(75,14,24,.06)}
+  .bnav a{display:flex;flex-direction:column;align-items:center;gap:2px;text-decoration:none;color:var(--muted);font-size:10.5px;font-weight:600;padding:4px 0;border-radius:10px}
+  .bnav a svg{width:21px;height:21px}
+  .bnav a.on{color:var(--maroon);background:var(--gold-l)}
+}
+
+h2.sec{font-family:var(--f-display);font-size:26px;margin:0;color:var(--maroon-d);text-wrap:balance;line-height:1.1}
+@media (max-width:720px){.bar h2.sec{flex-basis:100%}}
+.bar{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-bottom:14px}
+.bar .grow{flex:1}
+.muted{color:var(--muted)}
+.small{font-size:12.5px}
+.grid{display:grid;gap:12px}
+.g2{grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
+.g4{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px}
+.card h3{margin:0 0 8px;font-size:14px;letter-spacing:.3px;text-transform:uppercase;color:var(--maroon)}
+.panel-title{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px}
+.panel-title h3{margin:0}
+
+.stat{position:relative;overflow:hidden}
+.stat .n{font-size:28px;font-weight:800;font-variant-numeric:tabular-nums;color:var(--maroon-d);line-height:1.1}
+.stat .l{font-size:12.5px;color:var(--muted);font-weight:600}
+.stat .s{font-size:12px;margin-top:4px}
+.stat::after{content:"";position:absolute;right:-22px;bottom:-22px;width:56px;height:56px;border-radius:50%;border:7px solid var(--gold-l);opacity:.7}
+a.stat{text-decoration:none;color:inherit}
+
+.chip{display:inline-flex;align-items:center;gap:4px;padding:2px 9px;border-radius:999px;font-size:11.5px;font-weight:700;white-space:nowrap;background:#F1EAE0;color:var(--muted)}
+.c-ok{background:var(--ok-bg);color:var(--ok)}
+.c-warn{background:var(--warn-bg);color:var(--warn)}
+.c-bad{background:var(--bad-bg);color:var(--bad)}
+.c-info{background:var(--info-bg);color:var(--info)}
+.c-gold{background:var(--gold-l);color:#7A5A12}
+
+.btn{border:0;border-radius:10px;padding:9px 14px;font-weight:700;font-size:13.5px;background:var(--maroon);color:#fff;display:inline-flex;align-items:center;gap:6px}
+.btn:hover{background:var(--maroon-d)}
+.btn.ghost{background:transparent;color:var(--maroon);border:1px solid var(--line)}
+.btn.ghost:hover{background:var(--gold-l)}
+.btn.sm{padding:6px 10px;font-size:12.5px;border-radius:8px}
+.btn.gold{background:var(--gold);color:var(--maroon-d)}
+.btn.danger{background:transparent;color:var(--bad);border:1px solid var(--bad-bg)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+
+.field{display:flex;flex-direction:column;gap:4px}
+.field label{font-size:12px;font-weight:700;color:var(--muted);letter-spacing:.2px}
+.inp{width:100%;border:1px solid var(--line);background:#fff;border-radius:10px;padding:9px 11px;min-height:40px}
+textarea.inp{min-height:76px;resize:vertical}
+.inp:focus{outline:2px solid var(--gold);outline-offset:0;border-color:var(--gold)}
+.mini{width:auto;min-height:36px;padding:6px 10px}
+
+.seg{display:inline-flex;background:#fff;border:1px solid var(--line);border-radius:10px;padding:3px;gap:2px}
+.seg button{border:0;background:transparent;padding:6px 12px;border-radius:8px;font-weight:700;font-size:12.5px;color:var(--muted)}
+.seg button.on{background:var(--maroon);color:#fff}
+.chips{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chips button{flex:none;border:1px solid var(--line);background:#fff;border-radius:999px;padding:6px 12px;font-size:12.5px;font-weight:600;color:var(--ink)}
+.chips button.on{background:var(--gold-l);border-color:var(--gold);color:var(--maroon-d)}
+.chips button .ct{margin-left:5px;font-size:11px;color:var(--muted)}
+
+.vcard{border-top:4px solid var(--gold);cursor:pointer;transition:transform .12s}
+.vcard:hover{transform:translateY(-2px)}
+.vhead{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.vicon{width:38px;height:38px;border-radius:10px;display:grid;place-items:center;background:var(--gold-l);color:var(--maroon)}
+.vicon svg{width:20px;height:20px}
+.vname{font-weight:800;font-size:15.5px}
+.prog{height:8px;border-radius:99px;background:#F1EAE0;overflow:hidden;margin:6px 0}
+.prog i{display:block;height:100%;background:linear-gradient(90deg,var(--saffron),var(--gold))}
+.kv{display:flex;justify-content:space-between;gap:8px;font-size:12.5px;padding:3px 0}
+.kv span:first-child{color:var(--muted)}
+.kv b{font-variant-numeric:tabular-nums;text-align:right}
+
+.list{display:flex;flex-direction:column;gap:8px}
+.item{background:#fff;border:1px solid var(--line);border-radius:12px;padding:11px 12px;display:flex;gap:10px;align-items:flex-start}
+.item.stripe-bad{box-shadow:inset 4px 0 0 var(--bad)}
+.item.stripe-warn{box-shadow:inset 4px 0 0 var(--warn)}
+.item.stripe-ok{box-shadow:inset 4px 0 0 var(--ok)}
+.item .body{flex:1;min-width:0}
+.item .t{font-weight:700;overflow-wrap:anywhere}
+.item .meta{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:5px;font-size:12px;color:var(--muted)}
+.item .desc{margin-top:5px;font-size:13.5px;white-space:pre-wrap;overflow-wrap:anywhere}
+.item .acts{display:flex;flex-direction:column;gap:6px;align-items:flex-end}
+.item.done .t{text-decoration:line-through;color:var(--muted)}
+.clickable{cursor:pointer}
+.chk{flex:none;width:24px;height:24px;border-radius:7px;border:2px solid var(--gold);background:#fff;display:grid;place-items:center;padding:0;margin-top:1px}
+.chk.on{background:var(--ok);border-color:var(--ok);color:#fff}
+.chk svg{width:14px;height:14px}
+.empty{padding:20px;text-align:center;color:var(--muted);border:1.5px dashed var(--line);border-radius:12px;font-size:13.5px;background:#fffdf8}
+
+.ent{margin-bottom:16px}
+.ent-h{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px}
+.ent-h b{font-size:15.5px;color:var(--maroon-d)}
+.gst-row{display:grid;grid-template-columns:1.3fr 1fr auto;gap:8px;align-items:center}
+@media (max-width:520px){.gst-row{grid-template-columns:1fr auto}.gst-row .mid{grid-column:1/-1;order:3}}
+.due{font-variant-numeric:tabular-nums}
+
+.ring{--p:0;width:74px;height:74px;border-radius:50%;flex:none;display:grid;place-items:center;
+  background:conic-gradient(var(--ok) calc(var(--p)*1%),#F1EAE0 0)}
+.ring span{width:56px;height:56px;border-radius:50%;background:#fff;display:grid;place-items:center;font-weight:800;font-size:14px;font-variant-numeric:tabular-nums}
+.addrow{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.addrow .inp{flex:1;min-width:140px}
+
+.modal{position:fixed;inset:0;z-index:50;background:rgba(43,26,23,.45);display:flex;align-items:flex-end;justify-content:center}
+.modal.hidden{display:none}
+.sheet{background:var(--ivory);width:100%;max-width:560px;max-height:92%;overflow:auto;border-radius:18px 18px 0 0;padding:18px 16px calc(18px + env(safe-area-inset-bottom))}
+@media (min-width:721px){.modal{align-items:center}.sheet{border-radius:18px}}
+.sheet h3{margin:0 0 12px;font-family:var(--f-display);font-size:24px;color:var(--maroon-d)}
+.form{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.form .full{grid-column:1/-1}
+@media (max-width:420px){.form{grid-template-columns:1fr}}
+.sheet .foot{display:flex;gap:8px;margin-top:14px;align-items:center}
+.sheet .foot .grow{flex:1}
+
+#toast{position:fixed;left:50%;bottom:86px;transform:translateX(-50%);background:var(--maroon-d);color:#fff;padding:10px 16px;border-radius:10px;font-size:13.5px;font-weight:600;opacity:0;pointer-events:none;transition:opacity .2s;z-index:60;max-width:90%;text-align:center}
+#toast.show{opacity:1}
+.banner{background:var(--warn-bg);color:var(--warn);border:1px solid #F3D9A8;border-radius:10px;padding:9px 12px;font-size:13px;font-weight:600;margin-bottom:12px}
+.pin{position:fixed;inset:0;z-index:80;display:grid;place-items:center;padding:16px;background:linear-gradient(135deg,var(--maroon-d),var(--maroon))}
+.pinbox{background:var(--ivory);border-radius:18px;padding:24px 20px;width:100%;max-width:320px;text-align:center}
+.pinbox h2{font-family:var(--f-display);margin:0;color:var(--maroon-d);font-size:26px}.pinbox p{margin:4px 0 14px;color:var(--muted)}
+.note{font-size:12.5px;color:var(--muted);background:#fffdf8;border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-top:12px}
+</style>
+</head>
+<body>
+<header class="hero">
+  <div class="hero-in">
+    <div class="mono" aria-hidden="true">DMB</div>
+    <div>
+      <h1>DMB Work Tracker</h1>
+      <div class="sub">D M B Sweets Pvt Ltd · Jaipur</div>
+      <div class="live off" id="live"><i></i><span>Connecting…</span></div>
+    </div>
+    <div class="date" id="hdate"></div>
+  </div>
+</header>
+<nav class="tabs" id="tabs" aria-label="Sections"></nav>
+<main id="view"></main>
+<nav class="bnav" id="bnav" aria-label="Sections"></nav>
+<div id="modal" class="modal hidden" role="dialog" aria-modal="true"><div class="sheet" id="sheet"></div></div>
+<div id="toast" role="status"></div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script>
+/* ---------- settings ---------- */
+const FB={apiKey:"AIzaSyB85R_6aE3qi2e7p6itnWvJwBp8zOfXlIE",authDomain:"dmbcashpilot.firebaseapp.com",projectId:"dmbcashpilot",storageBucket:"dmbcashpilot.firebasestorage.app",messagingSenderId:"495403440515",appId:"1:495403440515:web:ea276bf425cfc50133feb6"};
+const APP='dmbwt';          // sab data Firestore ke "kv" collection mein is tag ke saath (cash slip data alag rehta hai)
+const TEAM_PIN='1234';      // team PIN; badalna ho to yahan badlo ('' = PIN band)
+const CLOUD=true;           // false = test copy, kuch bhi cloud pe save nahi hoga
+/* ---------- helpers ---------- */
+const $=s=>document.querySelector(s);
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const pad=n=>String(n).padStart(2,'0');
+const localISO=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const today=()=>localISO(new Date());
+const curMonth=()=>today().slice(0,7);
+const addMonth=(p,k)=>{let[y,m]=p.split('-').map(Number);m+=k;while(m>12){m-=12;y++}while(m<1){m+=12;y--}return`${y}-${pad(m)}`};
+const addDay=(d,k)=>{const x=new Date(d+'T00:00:00');x.setDate(x.getDate()+k);return localISO(x)};
+const MN=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const fmtMonth=p=>{if(!p)return'';const[y,m]=p.split('-');return`${MN[+m-1]} ${y}`};
+const fmtDate=d=>{if(!d)return'';const[y,m,dd]=d.split('-');return`${+dd} ${MN[+m-1]} ${y.slice(2)}`};
+const daysTo=d=>Math.round((new Date(d+'T00:00:00')-new Date(today()+'T00:00:00'))/864e5);
+const rupee=n=>(n===''||n==null||isNaN(n))?'':'₹'+Number(n).toLocaleString('en-IN',{maximumFractionDigits:2});
+function toast(msg){const t=$('#toast');t.textContent=msg;t.classList.add('show');clearTimeout(toast._t);toast._t=setTimeout(()=>t.classList.remove('show'),2600)}
+
+const I={
+ home:'<path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>',
+ voucher:'<rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/>',
+ eye:'<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
+ gst:'<path d="M4 4h16v16H4z"/><path d="M8 9h8M8 13h3M14 15l2 2 3-4"/>',
+ day:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+ todo:'<path d="M9 6h11M9 12h11M9 18h11"/><path d="M4 6l1 1 2-2M4 12l1 1 2-2M4 18l1 1 2-2"/>',
+ cart:'<path d="M3 4h2l2.4 11h11L21 7H6"/><circle cx="9" cy="19" r="1.5"/><circle cx="18" cy="19" r="1.5"/>',
+ book:'<path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M8 7h7"/>',
+ cash:'<rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/><path d="M6 10v4M18 10v4"/>',
+ sale:'<path d="M20 12l-8 8-9-9V3h8z"/><circle cx="7.5" cy="7.5" r="1.5"/>',
+ check:'<path d="M5 12l5 5L20 7"/>',
+ plus:'<path d="M12 5v14M5 12h14"/>',
+ l:'<path d="M15 6l-6 6 6 6"/>', r:'<path d="M9 6l6 6-6 6"/>'
+};
+const ic=(k,extra='')=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" ${extra}>${I[k]}</svg>`;
+
+/* ---------- constants ---------- */
+const TABS=[['home','Home','home'],['vouching','Vouching','voucher'],['observations','Observations','eye'],['gst','GST','gst'],['daily','Daily','day'],['todo','To-Do','todo']];
+const VTYPES=[['Purchase','cart'],['Journal','book'],['Cash','cash'],['Sales','sale']];
+const VSTAT=['Not started','In progress','Done'];
+const OCATS=['DP/SS','Credit Note','Binix','Zomato','Swiggy','Dine in','Royalty bill','Other'];
+const OAREAS=['Sales','Purchase','Journal','Cash'];
+const OSTAT=['Open','Discussed','Resolved'];
+const ENT={
+ DMB:{name:'D M B Sweets Pvt Ltd',freq:'Monthly'},
+ DFP:{name:'DMB Food Products',freq:'Quarterly · QRMP'},
+ SD:{name:'Suman Dairy',freq:'Quarterly · QRMP'}
+};
+const GSTAT=['Pending','Prepared','Paid','Filed'];
+const PRI=['High','Medium','Low'];
+const TSTAT=['Pending','In progress','Done'];
+
+/* GST calendar: return period P → due dates in following month */
+function gstRows(period){
+  const [,m]=period.split('-').map(Number);
+  const nx=addMonth(period,1); const due=d=>`${nx}-${pad(d)}`;
+  const rows=[
+    {ent:'DMB',form:'GSTR-1',kind:'Return',due:due(11)},
+    {ent:'DMB',form:'GSTR-3B',kind:'Return + Payment',due:due(20)}];
+  const qEnd=[3,6,9,12].includes(m);
+  for(const e of ['DFP','SD']){
+    if(qEnd){
+      rows.push({ent:e,form:'GSTR-1 (Qtly)',kind:'Return',due:due(13)});
+      rows.push({ent:e,form:'GSTR-3B (Qtly)',kind:'Return + Payment',due:due(24)});
+    } else rows.push({ent:e,form:'PMT-06',kind:'Payment',due:due(25)});
+  }
+  return rows.map(r=>{
+    const id=`${r.ent}__${r.form.replace(/[^A-Za-z0-9-]/g,'')}__${period}`;
+    const d=S.gst[id]||{};
+    const st=d.status||'Pending';
+    const done=st==='Filed'||(r.kind==='Payment'&&st==='Paid');
+    return {...r,period,id,doc:d,status:st,done,due:d.due||r.due};
+  });
+}
+
+/* ---------- state ---------- */
+const S={vouching:{},observations:[],gst:{},tasks:[],log:[]};
+const U={vPeriod:curMonth(),gPeriod:addMonth(curMonth(),-1),obsCat:'All',obsArea:'All',obsStat:'Open',dDate:today(),pKind:'pendency',pShow:'open'};
+let tab='home', db=null, live=false, readOnly=false, firstData=new Set(), loadTimer=null;
+
+function readHash(){const h=(location.hash||'').slice(1);tab=TABS.some(t=>t[0]===h)?h:'home'}
+readHash();
+addEventListener('hashchange',()=>{readHash();render();scrollTo(0,0)});
+
+/* ---------- db ---------- */
+function mockDb(){
+  const store={},subs={};
+  const emit=c=>(subs[c]||[]).forEach(f=>f({docs:Object.entries(store[c]||{}).map(([id,d])=>({id,exists:true,data:()=>d})),metadata:{fromCache:false}}));
+  const docRef=(c,id)=>({id,
+    async set(d){(store[c]=store[c]||{})[id]=JSON.parse(JSON.stringify(d));emit(c)},
+    async update(d){store[c][id]={...store[c][id],...d};emit(c)},
+    async delete(){if(store[c])delete store[c][id];emit(c)}});
+  return {collection:c=>({
+    onSnapshot(f){(subs[c]=subs[c]||[]).push(f);setTimeout(()=>emit(c));return()=>{}},
+    doc:id=>docRef(c,id||Math.random().toString(36).slice(2,12))
+  })};
+}
+function fbDb(){
+  firebase.initializeApp(FB);
+  const fs=firebase.firestore();
+  try{fs.enablePersistence({synchronizeTabs:true}).catch(()=>{})}catch(e){}
+  const kv=fs.collection('kv'), subs={}, errs=[];
+  const view=(c,snap)=>({metadata:{fromCache:snap.metadata.fromCache},
+    docs:snap.docs.filter(d=>d.get('col')===c).map(d=>{const o={...d.data()};const id=o._id;delete o.app;delete o.col;delete o._id;return{id,exists:true,data:()=>o}})});
+  let last=null;
+  kv.where('app','==',APP).onSnapshot(snap=>{last=snap;for(const c in subs)subs[c].forEach(f=>f(view(c,snap)))},
+    e=>errs.forEach(f=>f({code:e.code==='permission-denied'?'permission':'unavailable',message:e.message})));
+  const race=p=>Promise.race([p,new Promise(r=>setTimeout(r,4000))]); // offline ho to bhi queue ho jaata hai
+  return{collection:c=>({
+    onSnapshot(f,err){(subs[c]=subs[c]||[]).push(f);if(err)errs.push(err);if(last)f(view(c,last));return()=>{}},
+    doc(id){id=id||kv.doc().id;const ref=kv.doc(`${APP}_${c}_${id}`);return{id,
+      set:d=>race(ref.set({...d,app:APP,col:c,_id:id})),
+      delete:()=>race(ref.delete())}}
+  })};
+}
+async function write(col,id,data){
+  if(readOnly){toast('Aapke paas sirf dekhne ka access hai');return false}
+  try{
+    const ref=id?db.collection(col).doc(id):db.collection(col).doc();
+    await ref.set({...data,at:Date.now()});return true;
+  }catch(e){return fail(e)}
+}
+async function remove(col,id){
+  if(readOnly){toast('Aapke paas sirf dekhne ka access hai');return false}
+  try{await db.collection(col).doc(id).delete();return true}catch(e){return fail(e)}
+}
+function fail(e){
+  const c=e&&e.code;
+  if(c==='permission-denied'||c==='permission')toast('Firebase rules save allow nahi kar rahe. Rules check karo.');
+  else if(c==='invalid_argument')toast('Ye entry save nahi ho saki, details check karo.');
+  else if(c==='quota_exceeded')toast('Storage full ho gaya. Purani entries delete karo.');
+  else if(c==='resource_exhausted')toast('Thoda ruk ke dobara try karo.');
+  else toast('Save nahi hua. Internet check karke dobara try karo.');
+  render();return false;
+}
+function subscribe(col,map){
+  db.collection(col).onSnapshot(snap=>{
+    map(snap.docs.filter(d=>d.exists).map(d=>({id:d.id,...d.data()})));
+    if(!snap.metadata||!snap.metadata.fromCache){firstData.add(col);if(firstData.size===5){clearTimeout(loadTimer);setLive(live?'Live sync on':(CLOUD?'Offline':'TEST mode'),live)}}
+    render();
+  },err=>{clearTimeout(loadTimer);setLive('Sync band hai, page reload karo',false);render()});
+}
+function setLive(txt,on){const el=$('#live');el.classList.toggle('off',!on);el.lastElementChild.textContent=txt}
+
+/* ---------- render shell ---------- */
+function navHTML(){return TABS.map(([k,l,i])=>`<a href="#${k}" class="${tab===k?'on':''}">${ic(i)}<span>${l}</span></a>`).join('')}
+function render(){
+  const d=new Date();
+  $('#hdate').innerHTML=`<b>${d.toLocaleDateString('en-IN',{weekday:'long'})}</b>${d.getDate()} ${MN[d.getMonth()]} ${d.getFullYear()}`;
+  $('#tabs').innerHTML=navHTML();$('#bnav').innerHTML=navHTML();
+  const banner=!live&&db?`<div class="banner">${CLOUD?'Internet/Firebase se connect nahi hua. Ye entries sirf is screen pe hain, save nahi hongi.':'TEST copy: entries cloud pe save nahi hongi.'}</div>`:'';
+  const ro=readOnly?`<div class="banner">Is device se save nahi ho pa raha.</div>`:'';
+  const views={home:vHome,vouching:vVouching,observations:vObs,gst:vGst,daily:vDaily,todo:vTodo};
+  $('#view').innerHTML=banner+ro+views[tab]();
+}
+
+/* ---------- views ---------- */
+function statusChip(s){
+  const m={'Done':'c-ok','Filed':'c-ok','Paid':'c-ok','Resolved':'c-ok','In progress':'c-info','Prepared':'c-info','Discussed':'c-info','Pending':'c-warn','Not started':'c-warn','Open':'c-bad'};
+  return `<span class="chip ${m[s]||''}">${esc(s)}</span>`;
+}
+function dueChip(due,done){
+  if(done)return'<span class="chip c-ok">Done</span>';
+  if(!due)return'';
+  const n=daysTo(due);
+  if(n<0)return`<span class="chip c-bad">${-n} din overdue</span>`;
+  if(n===0)return'<span class="chip c-bad">Aaj due</span>';
+  if(n<=5)return`<span class="chip c-warn">${n} din baaki</span>`;
+  return`<span class="chip">${n} din baaki</span>`;
+}
+const priChip=p=>`<span class="chip ${p==='High'?'c-bad':p==='Medium'?'c-warn':''}">${esc(p||'Medium')}</span>`;
+
+function vHome(){
+  const gAll=gstRows(addMonth(curMonth(),-1)).filter(r=>!r.done).sort((a,b)=>a.due.localeCompare(b.due));
+  const gSoon=gAll.filter(r=>daysTo(r.due)<=7);
+  const vp=curMonth(); const vDone=VTYPES.filter(([t])=>(S.vouching[`${t}__${vp}`]||{}).status==='Done').length;
+  const openObs=S.observations.filter(o=>o.status!=='Resolved');
+  const tgt=S.tasks.filter(t=>t.kind==='target'&&t.date===today()); const tgtDone=tgt.filter(t=>t.done).length;
+  const pend=S.tasks.filter(t=>(t.kind==='pendency'||t.kind==='misc')&&t.status!=='Done');
+  const over=pend.filter(t=>t.due&&daysTo(t.due)<0);
+  const hi=pend.slice().sort(sortTasks).slice(0,5);
+  return `
+  <div class="grid g4" style="margin-bottom:14px">
+    <a class="card stat" href="#gst"><div class="l">GST due (7 din)</div><div class="n">${gSoon.length}</div><div class="s ${gAll.some(r=>daysTo(r.due)<0)?'':'muted'}">${gAll.some(r=>daysTo(r.due)<0)?'<span class="chip c-bad">Overdue hai</span>':'Sab time pe'}</div></a>
+    <a class="card stat" href="#vouching"><div class="l">Vouching · ${fmtMonth(vp)}</div><div class="n">${vDone}/4</div><div class="s muted">areas done</div></a>
+    <a class="card stat" href="#observations"><div class="l">Open observations</div><div class="n">${openObs.length}</div><div class="s muted">${S.observations.length} total</div></a>
+    <a class="card stat" href="#daily"><div class="l">Aaj ka target</div><div class="n">${tgtDone}/${tgt.length}</div><div class="s muted">complete</div></a>
+    <a class="card stat" href="#todo"><div class="l">Pendency open</div><div class="n">${pend.length}</div><div class="s">${over.length?`<span class="chip c-bad">${over.length} overdue</span>`:'<span class="muted">koi overdue nahi</span>'}</div></a>
+  </div>
+  <div class="grid g2">
+    <div class="card"><div class="panel-title"><h3>Upcoming GST</h3><a class="btn ghost sm" href="#gst">Sab dekho</a></div>
+      <div class="list">${gAll.slice(0,6).map(r=>`<div class="item ${daysTo(r.due)<0?'stripe-bad':daysTo(r.due)<=5?'stripe-warn':''}"><div class="body"><div class="t">${esc(r.form)} · ${esc(ENT[r.ent].name)}</div><div class="meta"><span>${fmtMonth(r.period)}</span><span class="due">Due ${fmtDate(r.due)}</span>${dueChip(r.due,r.done)}</div></div></div>`).join('')||'<div class="empty">Saari GST compliance done hai 🎉</div>'}</div></div>
+    <div class="card"><div class="panel-title"><h3>Aaj ke targets</h3><a class="btn ghost sm" href="#daily">Open</a></div>
+      <div class="list">${tgt.map(targetItem).join('')||'<div class="empty">Aaj ka koi target nahi daala. Daily tab mein add karo.</div>'}</div></div>
+    <div class="card"><div class="panel-title"><h3>Top pendency</h3><a class="btn ghost sm" href="#todo">Open</a></div>
+      <div class="list">${hi.map(taskItem).join('')||'<div class="empty">Koi pendency nahi.</div>'}</div></div>
+    <div class="card"><div class="panel-title"><h3>Latest observations</h3><a class="btn ghost sm" href="#observations">Open</a></div>
+      <div class="list">${openObs.slice().sort((a,b)=>(b.at||0)-(a.at||0)).slice(0,4).map(obsItem).join('')||'<div class="empty">Koi open observation nahi.</div>'}</div></div>
+  </div>`;
+}
+
+function vVouching(){
+  const p=U.vPeriod;
+  const cards=VTYPES.map(([t,i])=>{
+    const d=S.vouching[`${t}__${p}`]||{};
+    const tot=+d.total||0, chk=+d.checked||0, pct=tot?Math.min(100,Math.round(chk/tot*100)):(d.status==='Done'?100:0);
+    const obs=S.observations.filter(o=>o.area===t&&(o.date||'').startsWith(p));
+    return `<div class="card vcard" data-act="vedit" data-t="${t}" tabindex="0" role="button" aria-label="Update ${t} vouching">
+      <div class="vhead"><div class="vicon">${ic(i)}</div><div class="grow"><div class="vname">${t} Vouching</div><div class="small muted">${fmtMonth(p)}</div></div>${statusChip(d.status||'Not started')}</div>
+      <div class="kv"><span>Vouchers checked</span><b>${chk} / ${tot||'–'}</b></div>
+      <div class="prog"><i style="width:${pct}%"></i></div>
+      <div class="kv"><span>Assigned to</span><b>${esc(d.assignee)||'–'}</b></div>
+      <div class="kv"><span>Observations</span><b>${obs.length} (${obs.filter(o=>o.status!=='Resolved').length} open)</b></div>
+      ${d.remarks?`<div class="small muted" style="margin-top:6px;white-space:pre-wrap">${esc(d.remarks)}</div>`:''}
+    </div>`}).join('');
+  const sales=S.observations.filter(o=>o.area==='Sales'&&(o.date||'').startsWith(p));
+  return `<div class="bar"><h2 class="sec grow">Vouching</h2>
+      <button class="btn ghost sm" data-act="vmon" data-k="-1" aria-label="Previous month">${ic('l','width="16" height="16"')}</button>
+      <input type="month" class="inp mini" id="vPeriod" value="${p}" aria-label="Vouching month">
+      <button class="btn ghost sm" data-act="vmon" data-k="1" aria-label="Next month">${ic('r','width="16" height="16"')}</button></div>
+    <div class="grid g2">${cards}</div>
+    <div class="card" style="margin-top:14px"><div class="panel-title"><h3>Sales vouching observations · ${fmtMonth(p)}</h3><button class="btn sm" data-act="oadd" data-area="Sales">${ic('plus','width="15" height="15"')}Add</button></div>
+      <div class="chips">${OCATS.map(c=>{const n=sales.filter(o=>o.cat===c).length;return`<button data-act="ojump" data-cat="${esc(c)}">${esc(c)}<span class="ct">${n}</span></button>`}).join('')}</div>
+    </div>`;
+}
+
+function obsItem(o){
+  return `<div class="item clickable ${o.status==='Resolved'?'stripe-ok':o.status==='Open'?'stripe-bad':'stripe-warn'}" data-act="oedit" data-id="${esc(o.id)}">
+   <div class="body"><div class="meta" style="margin-top:0"><span class="chip c-gold">${esc(o.cat||'Other')}</span><span>${esc(o.area||'')} vouching</span>${o.date?`<span>${fmtDate(o.date)}</span>`:''}${o.vno?`<span>#${esc(o.vno)}</span>`:''}${o.amount?`<b style="color:var(--ink)">${rupee(o.amount)}</b>`:''}</div>
+   <div class="desc">${esc(o.text)}</div>
+   ${o.action?`<div class="small" style="margin-top:4px"><b>Action:</b> ${esc(o.action)}</div>`:''}
+   <div class="meta">${statusChip(o.status||'Open')}${o.assignee?`<span>👤 ${esc(o.assignee)}</span>`:''}</div></div>
+   ${o.status!=='Resolved'?`<div class="acts"><button class="btn ghost sm" data-act="oresolve" data-id="${esc(o.id)}">Resolve</button></div>`:''}
+  </div>`;
+}
+function vObs(){
+  let L=S.observations.slice();
+  if(U.obsArea!=='All')L=L.filter(o=>o.area===U.obsArea);
+  const base=L;
+  if(U.obsCat!=='All')L=L.filter(o=>(o.cat||'Other')===U.obsCat);
+  if(U.obsStat==='Open')L=L.filter(o=>o.status!=='Resolved');
+  if(U.obsStat==='Resolved')L=L.filter(o=>o.status==='Resolved');
+  L.sort((a,b)=>(b.date||'').localeCompare(a.date||'')||(b.at||0)-(a.at||0));
+  const cnt=c=>base.filter(o=>(c==='All'||(o.cat||'Other')===c)&&o.status!=='Resolved').length;
+  return `<div class="bar"><h2 class="sec grow">Observations</h2><button class="btn" data-act="oadd">${ic('plus','width="16" height="16"')}Add observation</button></div>
+   <div class="bar">
+     <select class="inp mini" id="obsArea" aria-label="Vouching area">${['All',...OAREAS].map(a=>`<option ${U.obsArea===a?'selected':''} value="${a}">${a==='All'?'Saare areas':a+' vouching'}</option>`).join('')}</select>
+     <div class="seg">${['Open','Resolved','All'].map(s=>`<button data-act="ostat" data-v="${s}" class="${U.obsStat===s?'on':''}">${s}</button>`).join('')}</div>
+   </div>
+   <div class="chips" style="margin-bottom:12px">${['All',...OCATS].map(c=>`<button data-act="ocat" data-v="${esc(c)}" class="${U.obsCat===c?'on':''}">${esc(c)}<span class="ct">${cnt(c)}</span></button>`).join('')}</div>
+   <div class="list">${L.map(obsItem).join('')||'<div class="empty">Is filter mein koi observation nahi. "Add observation" se nayi daalo.</div>'}</div>`;
+}
+
+function vGst(){
+  const p=U.gPeriod; const rows=gstRows(p);
+  const ents=['DMB','DFP','SD'];
+  const body=ents.map(e=>{
+    const R=rows.filter(r=>r.ent===e);
+    return `<div class="card ent"><div class="ent-h"><b>${esc(ENT[e].name)}</b><span class="chip c-gold">${ENT[e].freq}</span></div>
+     <div class="list">${R.map(r=>`<div class="item ${r.done?'stripe-ok':daysTo(r.due)<0?'stripe-bad':daysTo(r.due)<=5?'stripe-warn':''}">
+       <div class="body gst-row">
+         <div><div class="t">${esc(r.form)}</div><div class="small muted">${esc(r.kind)} · Due <span class="due">${fmtDate(r.due)}</span></div></div>
+         <div class="mid small">${r.doc.amount?`<div><b>${rupee(r.doc.amount)}</b> paid</div>`:''}${r.doc.ref?`<div class="muted">Ref: ${esc(r.doc.ref)}</div>`:''}${r.doc.doneOn?`<div class="muted">On ${fmtDate(r.doc.doneOn)}</div>`:''}${r.doc.remarks?`<div class="muted">${esc(r.doc.remarks)}</div>`:''}</div>
+         <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">${statusChip(r.status)}${dueChip(r.due,r.done)}<button class="btn ghost sm" data-act="gedit" data-id="${r.id}">Update</button></div>
+       </div></div>`).join('')}</div></div>`}).join('');
+  const qEnd=[3,6,9,12].includes(+p.split('-')[1]);
+  return `<div class="bar"><h2 class="sec grow">GST Payment & Returns</h2>
+     <button class="btn ghost sm" data-act="gmon" data-k="-1" aria-label="Previous period">${ic('l','width="16" height="16"')}</button>
+     <input type="month" class="inp mini" id="gPeriod" value="${p}" aria-label="Return period">
+     <button class="btn ghost sm" data-act="gmon" data-k="1" aria-label="Next period">${ic('r','width="16" height="16"')}</button></div>
+   <p class="small muted" style="margin:-6px 0 12px">Return period <b>${fmtMonth(p)}</b>, due in ${fmtMonth(addMonth(p,1))}. ${qEnd?'Quarter-end month: QRMP quarterly returns due.':'QRMP month: PMT-06 payment due.'}</p>
+   ${body}
+   <div class="note">Due dates standard GST calendar se hain: GSTR-1 11th, GSTR-3B 20th (monthly); QRMP mein PMT-06 25th, GSTR-1 13th aur GSTR-3B 24th (Rajasthan). Date extend ho to "Update" mein due date badal do.</div>`;
+}
+
+function targetItem(t){
+  return `<div class="item ${t.done?'done stripe-ok':''}">
+    <button class="chk ${t.done?'on':''}" data-act="ttoggle" data-id="${esc(t.id)}" aria-label="${t.done?'Mark not done':'Mark done'}">${t.done?ic('check'):''}</button>
+    <div class="body"><div class="t">${esc(t.title)}</div>${t.assignee?`<div class="meta"><span>👤 ${esc(t.assignee)}</span></div>`:''}</div>
+    <button class="btn ghost sm" data-act="tedit" data-id="${esc(t.id)}">Edit</button></div>`;
+}
+function vDaily(){
+  const d=U.dDate;
+  const T=S.tasks.filter(t=>t.kind==='target'&&t.date===d).sort((a,b)=>(a.done-b.done)||(a.at||0)-(b.at||0));
+  const done=T.filter(t=>t.done).length, pct=T.length?Math.round(done/T.length*100):0;
+  const prevOpen=S.tasks.filter(t=>t.kind==='target'&&t.date<d&&!t.done&&t.date>=addDay(d,-7));
+  const L=S.log.filter(l=>l.date===d).sort((a,b)=>(a.at||0)-(b.at||0));
+  const hrs=L.reduce((s,l)=>s+(+l.hours||0),0);
+  return `<div class="bar"><h2 class="sec grow">Daily Target & Tracker</h2>
+     <button class="btn ghost sm" data-act="dday" data-k="-1" aria-label="Previous day">${ic('l','width="16" height="16"')}</button>
+     <input type="date" class="inp mini" id="dDate" value="${d}" aria-label="Date">
+     <button class="btn ghost sm" data-act="dday" data-k="1" aria-label="Next day">${ic('r','width="16" height="16"')}</button>
+     ${d!==today()?'<button class="btn gold sm" data-act="dtoday">Aaj</button>':''}</div>
+   <div class="grid g2">
+    <div class="card">
+      <div class="panel-title"><div><h3>Daily target</h3><div class="small muted">${fmtDate(d)} · ${done} of ${T.length} done</div></div><div class="ring" style="--p:${pct}"><span>${pct}%</span></div></div>
+      <div class="list">${T.map(targetItem).join('')||'<div class="empty">Is din ka koi target nahi. Neeche add karo.</div>'}</div>
+      <form class="addrow" data-form="tadd"><input class="inp" id="tTitle" placeholder="Naya target, e.g. Cash vouching Nov 1–10" required><input class="inp" id="tWho" placeholder="Kaun karega" style="flex:0 1 130px" list="people"><button class="btn">${ic('plus','width="15" height="15"')}Add</button></form>
+      ${prevOpen.length?`<div class="note">Pichhle 7 din ke ${prevOpen.length} target pending hain. <button class="btn sm gold" data-act="tcarry" style="margin-left:6px">Aaj mein laao</button></div>`:''}
+    </div>
+    <div class="card">
+      <div class="panel-title"><div><h3>Daily tracker</h3><div class="small muted">Kya kaam hua · ${L.length} entries · ${hrs} hrs</div></div></div>
+      <div class="list">${L.map(l=>`<div class="item clickable" data-act="ledit" data-id="${esc(l.id)}"><div class="body"><div class="t">${esc(l.work)}</div><div class="meta">${l.name?`<span>👤 ${esc(l.name)}</span>`:''}${l.hours?`<span class="chip c-info">${esc(l.hours)} hr</span>`:''}</div></div></div>`).join('')||'<div class="empty">Aaj ka kaam yahan log karo.</div>'}</div>
+      <form class="addrow" data-form="ladd"><input class="inp" id="lWork" placeholder="Kaam jo kiya, e.g. Zomato settlement match" required><input class="inp" id="lName" placeholder="Naam" style="flex:0 1 110px" list="people"><input class="inp" id="lHrs" type="number" step="0.25" min="0" placeholder="Hrs" style="flex:0 1 80px"><button class="btn">${ic('plus','width="15" height="15"')}Log</button></form>
+    </div>
+   </div>${peopleList()}`;
+}
+
+function sortTasks(a,b){
+  const od=x=>x.due&&daysTo(x.due)<0?0:1;
+  return od(a)-od(b)||PRI.indexOf(a.priority||'Medium')-PRI.indexOf(b.priority||'Medium')||(a.due||'9').localeCompare(b.due||'9');
+}
+function taskItem(t){
+  const done=t.status==='Done';
+  return `<div class="item clickable ${done?'done stripe-ok':t.due&&daysTo(t.due)<0?'stripe-bad':t.priority==='High'?'stripe-warn':''}" data-act="pedit" data-id="${esc(t.id)}">
+   <button class="chk ${done?'on':''}" data-act="ptoggle" data-id="${esc(t.id)}" aria-label="${done?'Reopen':'Mark done'}">${done?ic('check'):''}</button>
+   <div class="body"><div class="t">${esc(t.title)}</div>
+   ${t.notes?`<div class="desc small muted">${esc(t.notes)}</div>`:''}
+   <div class="meta">${priChip(t.priority)}${t.status==='In progress'?statusChip('In progress'):''}${t.kind==='misc'?'<span class="chip">Misc</span>':''}${t.assignee?`<span>👤 ${esc(t.assignee)}</span>`:''}${t.due?`<span class="due">Due ${fmtDate(t.due)}</span>${dueChip(t.due,done)}`:''}</div></div></div>`;
+}
+function vTodo(){
+  let L=S.tasks.filter(t=>t.kind===U.pKind);
+  const openN=L.filter(t=>t.status!=='Done').length;
+  L=U.pShow==='open'?L.filter(t=>t.status!=='Done').sort(sortTasks):L.filter(t=>t.status==='Done').sort((a,b)=>(b.at||0)-(a.at||0));
+  const cnt=k=>S.tasks.filter(t=>t.kind===k&&t.status!=='Done').length;
+  return `<div class="bar"><h2 class="sec grow">To-Do</h2><button class="btn" data-act="padd">${ic('plus','width="16" height="16"')}Add ${U.pKind==='misc'?'misc work':'pendency'}</button></div>
+   <div class="bar"><div class="seg"><button data-act="pkind" data-v="pendency" class="${U.pKind==='pendency'?'on':''}">Other pendency (${cnt('pendency')})</button><button data-act="pkind" data-v="misc" class="${U.pKind==='misc'?'on':''}">Miscellaneous (${cnt('misc')})</button></div>
+   <div class="seg"><button data-act="pshow" data-v="open" class="${U.pShow==='open'?'on':''}">Open ${openN}</button><button data-act="pshow" data-v="done" class="${U.pShow==='done'?'on':''}">Done</button></div></div>
+   <div class="list">${L.map(taskItem).join('')||`<div class="empty">${U.pShow==='open'?'Sab clear hai. Nayi pendency "Add" se daalo.':'Abhi tak kuch complete nahi hua.'}</div>`}</div>`;
+}
+function people(){
+  const s=new Set();
+  S.tasks.forEach(t=>t.assignee&&s.add(t.assignee));S.observations.forEach(o=>o.assignee&&s.add(o.assignee));
+  S.log.forEach(l=>l.name&&s.add(l.name));Object.values(S.vouching).forEach(v=>v.assignee&&s.add(v.assignee));
+  return [...s].sort();
+}
+const peopleList=()=>`<datalist id="people">${people().map(p=>`<option value="${esc(p)}">`).join('')}</datalist>`;
+
+/* ---------- modal form ---------- */
+let MF=null;
+function openForm(cfg){
+  MF=cfg; const d=cfg.data||{};
+  const f=cfg.fields.map(x=>{
+    const v=d[x.k]==null?(x.def??''):d[x.k]; const id='f_'+x.k;
+    let ctl;
+    if(x.type==='select')ctl=`<select class="inp" id="${id}">${x.options.map(o=>`<option ${String(v)===o?'selected':''}>${esc(o)}</option>`).join('')}</select>`;
+    else if(x.type==='textarea')ctl=`<textarea class="inp" id="${id}" ${x.req?'required':''} placeholder="${esc(x.ph||'')}">${esc(v)}</textarea>`;
+    else ctl=`<input class="inp" id="${id}" type="${x.type||'text'}" value="${esc(v)}" ${x.req?'required':''} ${x.type==='number'?'step="any"':''} ${x.list?'list="people"':''} placeholder="${esc(x.ph||'')}">`;
+    return `<div class="field ${x.full?'full':''}"><label for="${id}">${esc(x.label)}</label>${ctl}</div>`;
+  }).join('');
+  $('#sheet').innerHTML=`<h3>${esc(cfg.title)}</h3>${cfg.sub?`<p class="small muted" style="margin:-6px 0 12px">${esc(cfg.sub)}</p>`:''}
+   <form id="mform"><div class="form">${f}</div>
+   <div class="foot">${cfg.onDelete?'<button type="button" class="btn danger sm" data-act="mdel">Delete</button>':''}<span class="grow"></span><button type="button" class="btn ghost" data-act="mclose">Cancel</button><button class="btn" id="msave">Save</button></div></form>${peopleList()}`;
+  $('#modal').classList.remove('hidden');
+  setTimeout(()=>{const el=$('#sheet .inp');el&&el.focus()},50);
+}
+function closeForm(){$('#modal').classList.add('hidden');MF=null}
+function formVals(){const o={};MF.fields.forEach(x=>{let v=$('#f_'+x.k).value;if(x.type==='number')v=v===''?'':Number(v);o[x.k]=typeof v==='string'?v.trim():v});return o}
+
+/* ---------- actions ---------- */
+const O=id=>S.observations.find(o=>o.id===id);
+const T=id=>S.tasks.find(t=>t.id===id);
+const strip=d=>{const{id,...r}=d;return r};
+
+function obsForm(o,defArea){
+  openForm({title:o?'Observation edit':'Nayi observation',
+    data:o||{date:today(),area:defArea||'Sales',status:'Open',cat:defArea==='Sales'?'DP/SS':'Other'},
+    fields:[{k:'area',label:'Vouching area',type:'select',options:OAREAS},{k:'cat',label:'Category',type:'select',options:OCATS},
+      {k:'date',label:'Date',type:'date'},{k:'vno',label:'Voucher / Bill no.',ph:'e.g. SV/1123'},
+      {k:'amount',label:'Amount (₹)',type:'number'},{k:'status',label:'Status',type:'select',options:OSTAT},
+      {k:'text',label:'Observation',type:'textarea',full:true,req:true,ph:'Kya galat mila / kya missing hai'},
+      {k:'action',label:'Action / client reply',type:'textarea',full:true},{k:'assignee',label:'Assigned to',list:true,full:true}],
+    onSave:v=>write('observations',o&&o.id,{...(o?strip(o):{}),...v}),
+    onDelete:o?()=>remove('observations',o.id):null});
+}
+function taskForm(t,kind){
+  const k=t?t.kind:kind;
+  openForm({title:t?'Edit':(k==='misc'?'Misc work add karo':'Pendency add karo'),
+    data:t||{priority:'Medium',status:'Pending'},
+    fields:[{k:'title',label:'Kaam',full:true,req:true,ph:'e.g. TDS 26Q data collect karna'},{k:'assignee',label:'Assigned to',list:true},{k:'due',label:'Due date',type:'date'},
+      {k:'priority',label:'Priority',type:'select',options:PRI},{k:'status',label:'Status',type:'select',options:TSTAT},
+      {k:'kind',label:'Type',type:'select',options:['pendency','misc'],def:k},{k:'notes',label:'Notes',type:'textarea',full:true}],
+    onSave:v=>write('tasks',t&&t.id,{...(t?strip(t):{}),...v}),
+    onDelete:t?()=>remove('tasks',t.id):null});
+}
+
+document.addEventListener('click',async e=>{
+  const el=e.target.closest('[data-act]'); if(!el)return;
+  const a=el.dataset.act, id=el.dataset.id;
+  if(a!=='vedit'&&a!=='oedit'&&a!=='pedit'&&a!=='ledit')e.stopPropagation();
+  switch(a){
+   case 'mclose':closeForm();break;
+   case 'mdel':
+     if(el.dataset.sure){const fn=MF.onDelete;closeForm();if(await fn())toast('Delete ho gaya')}
+     else{el.dataset.sure='1';el.textContent='Pakka delete?'}
+     break;
+   case 'vmon':U.vPeriod=addMonth(U.vPeriod,+el.dataset.k);render();break;
+   case 'gmon':U.gPeriod=addMonth(U.gPeriod,+el.dataset.k);render();break;
+   case 'dday':U.dDate=addDay(U.dDate,+el.dataset.k);render();break;
+   case 'dtoday':U.dDate=today();render();break;
+   case 'vedit':{
+     const t=el.dataset.t, did=`${t}__${U.vPeriod}`, d=S.vouching[did];
+     openForm({title:`${t} Vouching`,sub:fmtMonth(U.vPeriod),data:d||{status:'Not started'},
+       fields:[{k:'status',label:'Status',type:'select',options:VSTAT},{k:'assignee',label:'Assigned to',list:true},
+         {k:'total',label:'Total vouchers',type:'number'},{k:'checked',label:'Vouchers checked',type:'number'},
+         {k:'range',label:'Period covered',ph:'e.g. 1–15 Nov',full:true},{k:'remarks',label:'Remarks',type:'textarea',full:true}],
+       onSave:v=>write('vouching',did,{type:t,period:U.vPeriod,...(d?strip(d):{}),...v})});
+     break;}
+   case 'oadd':obsForm(null,el.dataset.area||(U.obsArea!=='All'?U.obsArea:'Sales'));break;
+   case 'oedit':obsForm(O(id));break;
+   case 'oresolve':{const o=O(id);if(o&&await write('observations',id,{...strip(o),status:'Resolved'}))toast('Resolved mark ho gaya');break;}
+   case 'ojump':U.obsArea='Sales';U.obsCat=el.dataset.cat;U.obsStat='All';location.hash='observations';break;
+   case 'ocat':U.obsCat=el.dataset.v;render();break;
+   case 'ostat':U.obsStat=el.dataset.v;render();break;
+   case 'gedit':{
+     const r=gstRows(U.gPeriod).find(x=>x.id===id);
+     openForm({title:`${r.form} · ${ENT[r.ent].name}`,sub:`Period ${fmtMonth(r.period)} · ${r.kind}`,
+       data:{...r.doc,status:r.status,due:r.due},
+       fields:[{k:'status',label:'Status',type:'select',options:GSTAT},{k:'due',label:'Due date',type:'date'},
+         {k:'amount',label:'Tax paid (₹)',type:'number'},{k:'doneOn',label:'Filed / paid on',type:'date'},
+         {k:'ref',label:'ARN / Challan no. (CPIN/CIN)',full:true},{k:'remarks',label:'Remarks',type:'textarea',full:true}],
+       onSave:v=>write('gst',id,{ent:r.ent,form:r.form,period:r.period,...strip(r.doc),...v,doneOn:v.doneOn||((v.status==='Filed'||v.status==='Paid')&&!r.doc.doneOn?today():v.doneOn)})});
+     break;}
+   case 'ttoggle':{const t=T(id);if(t)await write('tasks',id,{...strip(t),done:!t.done});break;}
+   case 'tedit':{const t=T(id);openForm({title:'Target edit',data:t,
+       fields:[{k:'title',label:'Target',full:true,req:true},{k:'assignee',label:'Kaun karega',list:true},{k:'date',label:'Date',type:'date'}],
+       onSave:v=>write('tasks',id,{...strip(t),...v}),onDelete:()=>remove('tasks',id)});break;}
+   case 'tcarry':{
+     const L=S.tasks.filter(t=>t.kind==='target'&&t.date<U.dDate&&!t.done&&t.date>=addDay(U.dDate,-7));
+     for(const t of L){if(!await write('tasks',t.id,{...strip(t),date:U.dDate}))break}
+     toast(`${L.length} target aaj mein shift ho gaye`);break;}
+   case 'ledit':{const l=S.log.find(x=>x.id===id);openForm({title:'Tracker entry',data:l,
+       fields:[{k:'work',label:'Kaam',type:'textarea',full:true,req:true},{k:'name',label:'Naam',list:true},{k:'hours',label:'Hours',type:'number'},{k:'date',label:'Date',type:'date'}],
+       onSave:v=>write('log',id,{...strip(l),...v}),onDelete:()=>remove('log',id)});break;}
+   case 'padd':taskForm(null,U.pKind);break;
+   case 'pedit':taskForm(T(id));break;
+   case 'ptoggle':{const t=T(id);if(t)await write('tasks',id,{...strip(t),status:t.status==='Done'?'Pending':'Done',doneOn:t.status==='Done'?'':today()});break;}
+   case 'pkind':U.pKind=el.dataset.v;render();break;
+   case 'pshow':U.pShow=el.dataset.v;render();break;
+  }
+});
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'&&MF)closeForm();
+  if((e.key==='Enter'||e.key===' ')&&e.target.matches('.vcard')){e.preventDefault();e.target.click()}
+});
+$('#modal').addEventListener('click',e=>{if(e.target.id==='modal')closeForm()});
+document.addEventListener('change',e=>{
+  const t=e.target;
+  if(t.id==='vPeriod'&&t.value){U.vPeriod=t.value;render()}
+  if(t.id==='gPeriod'&&t.value){U.gPeriod=t.value;render()}
+  if(t.id==='dDate'&&t.value){U.dDate=t.value;render()}
+  if(t.id==='obsArea'){U.obsArea=t.value;render()}
+});
+document.addEventListener('submit',async e=>{
+  e.preventDefault();
+  const f=e.target;
+  if(f.closest('.pin'))return;
+  if(f.id==='mform'){
+    const btn=$('#msave');btn.disabled=true;btn.textContent='Saving…';
+    const ok=await MF.onSave(formVals());
+    if(ok){closeForm();toast('Save ho gaya ✓')}else{btn.disabled=false;btn.textContent='Save'}
+    return;
+  }
+  if(f.dataset.form==='tadd'){
+    const title=$('#tTitle').value.trim();if(!title)return;
+    if(await write('tasks',null,{kind:'target',title,assignee:$('#tWho').value.trim(),date:U.dDate,done:false}))toast('Target add ho gaya');
+  }
+  if(f.dataset.form==='ladd'){
+    const work=$('#lWork').value.trim();if(!work)return;
+    if(await write('log',null,{date:U.dDate,work,name:$('#lName').value.trim(),hours:$('#lHrs').value===''?'':Number($('#lHrs').value)}))toast('Entry log ho gayi');
+  }
+});
+
+/* ---------- PIN ---------- */
+function pinGate(){
+  if(!TEAM_PIN)return Promise.resolve();
+  try{if(localStorage.getItem('dmbwt_pin')===TEAM_PIN)return Promise.resolve()}catch(e){}
+  return new Promise(res=>{
+    const w=document.createElement('div');w.className='pin';
+    w.innerHTML=`<form class="pinbox"><div class="mono" style="margin:0 auto 10px">DMB</div><h2>DMB Work Tracker</h2><p>Team PIN daalo</p>
+      <input id="pinIn" class="inp" type="password" inputmode="numeric" autocomplete="off" aria-label="Team PIN" style="text-align:center;font-size:20px;letter-spacing:6px">
+      <div id="pinErr" class="small" style="color:var(--bad);min-height:18px;margin-top:6px"></div><button class="btn" style="width:100%;justify-content:center">Open</button></form>`;
+    document.body.appendChild(w);setTimeout(()=>w.querySelector('#pinIn').focus(),50);
+    w.querySelector('form').addEventListener('submit',e=>{e.preventDefault();e.stopPropagation();
+      if(w.querySelector('#pinIn').value===TEAM_PIN){try{localStorage.setItem('dmbwt_pin',TEAM_PIN)}catch(x){}w.remove();res()}
+      else w.querySelector('#pinErr').textContent='PIN galat hai';});
+  });
+}
+/* ---------- boot ---------- */
+render();
+(async()=>{
+  await pinGate();
+  let real=null;
+  try{if(CLOUD&&window.firebase)real=fbDb()}catch(e){console.error(e)}
+  db=real||mockDb(); live=!!real;
+  setLive(live?'Loading…':(CLOUD?'Offline':'TEST mode'),false);
+  loadTimer=setTimeout(()=>setLive('Data load nahi ho raha, internet check karo',false),10000);
+  subscribe('vouching',a=>{S.vouching={};a.forEach(d=>S.vouching[d.id]=d)});
+  subscribe('observations',a=>S.observations=a);
+  subscribe('gst',a=>{S.gst={};a.forEach(d=>S.gst[d.id]=d)});
+  subscribe('tasks',a=>S.tasks=a);
+  subscribe('log',a=>S.log=a);
+})();
+</script>
+</body>
+</html>
