@@ -169,6 +169,10 @@ textarea.inp{min-height:76px;resize:vertical}
 .gst-row{display:grid;grid-template-columns:1.3fr 1fr auto;gap:8px;align-items:center}
 @media (max-width:520px){.gst-row{grid-template-columns:1fr auto}.gst-row .mid{grid-column:1/-1;order:3}}
 .due{font-variant-numeric:tabular-nums}
+.tt{width:100%;border-collapse:collapse;font-size:13px;font-variant-numeric:tabular-nums}
+.tt th{text-align:left;font-size:11.5px;color:var(--muted);font-weight:700;padding:6px 8px;border-bottom:1px solid var(--line)}
+.tt td{padding:7px 8px;border-bottom:1px solid var(--line)}
+.tt th:not(:first-child),.tt td:not(:first-child){text-align:right}
 
 .ring{--p:0;width:74px;height:74px;border-radius:50%;flex:none;display:grid;place-items:center;background:conic-gradient(var(--ok) calc(var(--p)*1%),#F1EAE0 0)}
 .ring span{width:56px;height:56px;border-radius:50%;background:#fff;display:grid;place-items:center;font-weight:800;font-size:14px;font-variant-numeric:tabular-nums}
@@ -234,7 +238,7 @@ textarea.inp{min-height:76px;resize:vertical}
 <nav class="bnav" id="bnav" aria-label="Sections"></nav>
 <div id="modal" class="modal hidden" role="dialog" aria-modal="true"><div class="sheet" id="sheet"></div></div>
 <div id="toast" role="status"></div>
-<input type="file" id="fileIn" accept=".json,application/json" hidden>
+<input type="file" id="fileIn" accept=".json,.xlsx,application/json,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" hidden>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
@@ -244,12 +248,38 @@ textarea.inp{min-height:76px;resize:vertical}
 const CLOUD=/*CLOUD*/true;   // false = TEST copy: nothing is saved to the cloud
 const FB={apiKey:"AIzaSyB85R_6aE3qi2e7p6itnWvJwBp8zOfXlIE",authDomain:"dmbcashpilot.firebaseapp.com",projectId:"dmbcashpilot",storageBucket:"dmbcashpilot.firebasestorage.app",messagingSenderId:"495403440515",appId:"1:495403440515:web:ea276bf425cfc50133feb6"};
 const APP='dmbwt';            // every record is saved in Firestore "kv" with this tag; cash slip data is never touched
-const DEF={pin:'1234',team:[],outlets:['Kartarpura','Lal Kothi','Jhotwara','Kalwar'],
+const DEF={pin:'1234',team:[],desigs:['Partner','CA','Article'],
+  clients:['D M B Sweets Pvt Ltd','DMB Food Products','Suman Dairy'],outlets:['Kartarpura','Lal Kothi','Jhotwara','Kalwar'],
   vTypes:[{name:'Purchase',ow:false},{name:'Journal',ow:false},{name:'Cash',ow:true},{name:'Sales',ow:true}],
   oCats:['DP/SS','Credit Note','Binix','Zomato','Swiggy','Dine in','Royalty bill','Other'],
   ents:[{key:'DMB',name:'D M B Sweets Pvt Ltd',freq:'M'},{key:'DFP',name:'DMB Food Products',freq:'Q'},{key:'SD',name:'Suman Dairy',freq:'Q'}],
   due:{m1:11,m3b:20,q1:13,q3b:24,pmt:25},
   places:['Client Place','Office','WFH']};
+/* Other compliance master (editable in Settings). type M = monthly (day of next month, optional March due DD-MM);
+   type D = fixed dates every year: "DD-MM | label", {FY} = FY of the due date, {PrevFY} = previous FY */
+const COMP_CATS=['GST','TDS/TCS','Income Tax','ROC','Labour','FSSAI','Other'];
+const COMP_DEF=[
+ {id:'tdspay',name:'TDS payment',cat:'TDS/TCS',type:'M',day:7,mar:'30-04',ents:['DMB'],note:'March TDS due 30 April'},
+ {id:'tcspay',name:'TCS payment',cat:'TDS/TCS',type:'M',day:7,ents:[]},
+ {id:'f140',name:'TDS return Form 140 (old 26Q)',cat:'TDS/TCS',type:'D',dates:['31-07 | Q1 {FY}','31-10 | Q2 {FY}','31-01 | Q3 {FY}','31-05 | Q4 {PrevFY}'],ents:['DMB']},
+ {id:'f138',name:'TDS return Form 138 (old 24Q, salary)',cat:'TDS/TCS',type:'D',dates:['31-07 | Q1 {FY}','31-10 | Q2 {FY}','31-01 | Q3 {FY}','31-05 | Q4 {PrevFY}'],ents:['DMB']},
+ {id:'f143',name:'TCS return Form 143 (old 27EQ)',cat:'TDS/TCS',type:'D',dates:['31-07 | Q1 {FY}','31-10 | Q2 {FY}','31-01 | Q3 {FY}','31-05 | Q4 {PrevFY}'],ents:[]},
+ {id:'f131',name:'TDS certificate Form 131 (old 16A)',cat:'TDS/TCS',type:'D',dates:['15-08 | Q1 {FY}','15-11 | Q2 {FY}','15-02 | Q3 {FY}','15-06 | Q4 {PrevFY}'],ents:['DMB']},
+ {id:'f130',name:'Salary TDS certificate Form 130 (old Form 16)',cat:'TDS/TCS',type:'D',dates:['15-06 | {PrevFY}'],ents:['DMB']},
+ {id:'advtax',name:'Advance tax',cat:'Income Tax',type:'D',dates:['15-06 | 1st instalment (15%) {FY}','15-09 | 2nd instalment (45%) {FY}','15-12 | 3rd instalment (75%) {FY}','15-03 | 4th instalment (100%) {FY}'],ents:['DMB']},
+ {id:'taxaudit',name:'Tax audit report',cat:'Income Tax',type:'D',dates:['30-09 | {PrevFY}'],ents:['DMB']},
+ {id:'itr',name:'Income tax return',cat:'Income Tax',type:'D',dates:['31-10 | {PrevFY}'],ents:['DMB']},
+ {id:'pf',name:'PF payment & ECR',cat:'Labour',type:'M',day:15,ents:['DMB']},
+ {id:'esi',name:'ESI payment',cat:'Labour',type:'M',day:15,ents:['DMB']},
+ {id:'gstr9',name:'GSTR-9 / 9C annual return',cat:'GST',type:'D',dates:['31-12 | {PrevFY}'],ents:['DMB']},
+ {id:'agm',name:'AGM (last date)',cat:'ROC',type:'D',dates:['30-09 | {PrevFY}'],ents:['DMB']},
+ {id:'aoc4',name:'AOC-4 (30 days from AGM)',cat:'ROC',type:'D',dates:['30-10 | {PrevFY}'],ents:['DMB']},
+ {id:'mgt7',name:'MGT-7 (60 days from AGM)',cat:'ROC',type:'D',dates:['29-11 | {PrevFY}'],ents:['DMB']},
+ {id:'dpt3',name:'DPT-3',cat:'ROC',type:'D',dates:['30-06 | {PrevFY}'],ents:['DMB']},
+ {id:'msme1',name:'MSME-1 (dues to MSME over 45 days)',cat:'ROC',type:'D',dates:['30-04 | Oct–Mar {PrevFY}','31-10 | Apr–Sep {FY}'],ents:['DMB']},
+ {id:'dir3',name:'DIR-3 KYC (once in 3 years)',cat:'ROC',type:'D',dates:['30-06 | Directors due this year'],ents:[]},
+ {id:'fssai',name:'FSSAI annual return (Form D1)',cat:'FSSAI',type:'D',dates:['31-05 | {PrevFY}'],ents:['DMB']}
+];
 
 /* ================= HELPERS ================= */
 const $=s=>document.querySelector(s);
@@ -293,23 +323,26 @@ const I={
 const ic=k=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${I[k]}</svg>`;
 const vIcon=n=>({Purchase:'cart',Journal:'book',Cash:'cash',Sales:'sale'}[n]||'voucher');
 
-const TABS=[['home','Home','home'],['vouching','Vouching','voucher'],['observations','Observations','eye'],['gst','GST','gst'],['daily','Daily','day'],['todo','To-Do','todo']];
+const TABS=[['home','Home','home'],['vouching','Vouching','voucher'],['observations','Observations','eye'],['gst','Compliance','gst'],['daily','Daily','day'],['todo','To-Do','todo']];
 const VSTAT=['Not started','In progress','Done'];
 const OAREAS=()=>ST().vTypes.map(v=>v.name);
 const OSTAT=['Open','Discussed','Resolved'];
 const GSTAT=['Pending','Prepared','Paid','Filed'];
 const PRI=['High','Medium','Low'];
 const TSTAT=['Pending','In progress','Done'];
-const COLS=['settings','vouching','observations','gst','tasks','log'];
+const COLS=['settings','vouching','observations','gst','comp','tasks','log'];
 
 /* ================= STATE ================= */
-const S={settings:{},vouching:{},observations:{},gst:{},tasks:{},log:{}};
-const U={vPeriod:curMonth(),gPeriod:addMonth(curMonth(),-1),obsCat:'All',obsArea:'All',obsStat:'Open',obsQ:'',dDate:today(),pKind:'pendency',pShow:'open'};
-let tab='home', db=null, live=false, me=ls.get('dmbwt_me')||'', firstData=new Set(), loadTimer=null, settingsLoaded=false;
-const ST=()=>{const s=S.settings.main||{};return{...DEF,...s,due:{...DEF.due,...(s.due||{})}}};
+const S={settings:{},vouching:{},observations:{},gst:{},comp:{},tasks:{},log:{}};
+const U={vPeriod:curMonth(),gDue:curMonth(),compCat:'All',dMode:'day',tFrom:curMonth()+'-01',tTo:today(),tWho:'All',tDesig:'All',tClient:'All',obsCat:'All',obsArea:'All',obsStat:'Open',obsQ:'',dDate:today(),pKind:'pendency',pShow:'open'};
+let tab='home', db=null, live=false, me=ls.get('dmbwt_me')||'', myDesig=ls.get('dmbwt_desig')||'', firstData=new Set(), loadTimer=null, settingsLoaded=false;
+const ST=()=>{const s=S.settings.main||{};const o={...DEF,...s,due:{...DEF.due,...(s.due||{})}};o.comp=s.comp||COMP_DEF;
+  o.team=(o.team||[]).map(t=>typeof t==='string'?{name:t,desig:''}:t);return o};
+const desigOf=n=>{const t=ST().team.find(x=>x.name.toLowerCase()===String(n||'').toLowerCase());return t?t.desig:''};
+const withDesig=n=>{const d=desigOf(n);return esc(n)+(d?` <span class="chip c-gold">${esc(d)}</span>`:'')};
 const all=c=>Object.values(S[c]).filter(d=>!d.deleted);
 const TABK=TABS.map(t=>t[0]).concat('settings');
-function readHash(){const h=(location.hash||'').slice(1);tab=TABK.includes(h)?h:'home'}
+function readHash(){let h=(location.hash||'').slice(1);if(h==='compliance')h='gst';tab=TABK.includes(h)?h:'home'}
 readHash();
 addEventListener('hashchange',()=>{readHash();render();scrollTo(0,0)});
 
@@ -344,7 +377,7 @@ function setLive(txt,on){const el=$('#live');el.classList.toggle('off',!on);el.l
 
 /* ---------- save with change history ---------- */
 const META=['at','by','hist','id'];
-const HIDE=['type','period','ent','form','col'];
+const HIDE=['type','period','ent','form','col','item'];
 function flat(o,p,out){out=out||{};p=p||'';for(const k in o){if(!p&&(META.includes(k)||HIDE.includes(k)))continue;const v=o[k];
   if(v&&typeof v==='object'&&!Array.isArray(v))flat(v,p+k+'.',out);else out[p+k]=Array.isArray(v)?v.map(x=>typeof x==='object'?Object.values(x).join(' / '):x).join(', '):v}return out}
 function diff(a,b){const A=flat(a||{}),B=flat(b);const ks=new Set([...Object.keys(A),...Object.keys(B)]);const ch=[];
@@ -382,7 +415,7 @@ function navHTML(){return TABS.map(([k,l,i])=>`<a href="#${k}" class="${tab===k?
 function render(){
   $('#tabs').innerHTML=navHTML();$('#bnav').innerHTML=navHTML();
   $('#gearBtn').classList.toggle('on',tab==='settings');
-  $('#who').innerHTML=me?`Signed in as <b>${esc(me)}</b>`:'';
+  $('#who').innerHTML=me?`Signed in as <b>${esc(me)}</b>${desigOf(me)||myDesig?' · '+esc(desigOf(me)||myDesig):''}`:'';
   const banner=!live&&db?`<div class="banner">${CLOUD?'Not connected to the internet. New entries are kept on this phone and will sync when you are back online.':'TEST copy: entries are not saved to the cloud.'}</div>`:'';
   const views={home:vHome,vouching:vVouching,observations:vObs,gst:vGst,daily:vDaily,todo:vTodo,settings:vSettings};
   $('#view').innerHTML=banner+views[tab]();
@@ -430,7 +463,32 @@ function gstRows(period){
     return{...r,period,id,doc:d,status,done,due:d.due||r.due};
   });
 }
-function gstStat(p){const R=gstRows(p);const d=R.filter(r=>r.done).length;return{txt:`${d}/${R.length}`,pct:R.length?d/R.length*100:0,bad:R.some(r=>!r.done&&daysTo(r.due)<0)}}
+const CSTAT=['Pending','In progress','Done','Not applicable'];
+const dm2md=x=>{const m=String(x||'').trim().match(/^(\d{1,2})[-\/.](\d{1,2})$/);return m?`${pad(m[2])}-${pad(m[1])}`:''}; // DD-MM -> MM-DD
+function compRows(dueMonth){
+  const st=ST();
+  const g=gstRows(addMonth(dueMonth,-1)).map(r=>({...r,col:'gst',cat:'GST',name:r.form,label:'Return period '+fmtMonth(r.period)}));
+  const out=[...g];const [y,m]=dueMonth.split('-').map(Number);
+  st.comp.forEach(it=>{
+    if(it.off)return;
+    const occ=[];
+    if(it.type==='M'){
+      [1,2].forEach(k=>{const P=addMonth(dueMonth,-k);const pm=+P.slice(5);
+        let due=(pm===3&&dm2md(it.mar))?`${P.slice(0,4)}-${dm2md(it.mar)}`:`${addMonth(P,1)}-${pad(Math.min(+it.day||1,lastDay(+addMonth(P,1).slice(0,4),+addMonth(P,1).slice(5))))}`;
+        if(due.startsWith(dueMonth))occ.push({due,label:'For '+fmtMonth(P)})});
+    } else (it.dates||[]).forEach(line=>{const[d,lab]=String(line).split('|');const md=dm2md(d);if(!md||+md.slice(0,2)!==m)return;
+        const dd=Math.min(+md.slice(3),lastDay(y,m));const due=`${dueMonth}-${pad(dd)}`;const fy=fyOf(dueMonth);
+        occ.push({due,label:String(lab||'').trim().replace(/\{FY\}/g,fyLabel(fy)).replace(/\{PrevFY\}/g,fyLabel(fy-1))})});
+    const uniq={};occ.forEach(o=>uniq[o.due]=o);
+    Object.values(uniq).forEach(o=>(it.ents||[]).forEach(k=>{const ent=st.ents.find(e=>e.key===k);if(!ent)return;
+      const id=`${slug(it.id)}__${slug(k)}__${o.due}`;const d=S.comp[id]&&!S.comp[id].deleted?S.comp[id]:{};
+      const status=d.status||'Pending';
+      out.push({col:'comp',id,ent,cat:it.cat,name:it.name,form:it.name,kind:it.note||'',label:o.label,due:d.due||o.due,doc:d,status,done:status==='Done'||status==='Not applicable',item:it.id})}));
+  });
+  return out.map(r=>r.col==='gst'?r:r).sort((a,b)=>a.due.localeCompare(b.due));
+}
+function compStat(p){const R=compRows(p);const d=R.filter(r=>r.done).length;return{txt:`${d}/${R.length}`,pct:R.length?d/R.length*100:0,bad:R.some(r=>!r.done&&daysTo(r.due)<0)}}
+const upcoming=()=>{const m=curMonth();return[...compRows(addMonth(m,-1)),...compRows(m),...compRows(addMonth(m,1))].filter(r=>!r.done&&daysTo(r.due)<=10).sort((a,b)=>a.due.localeCompare(b.due))};
 
 /* ================= VOUCHING ================= */
 const vId=(t,p)=>`${slug(t)}__${p}`;
@@ -445,15 +503,15 @@ function vStat(p){const T=ST().vTypes;const d=T.filter(t=>vStatus(t,S.vouching[v
 /* ================= VIEWS ================= */
 function feedItems(n){
   const out=[];
-  const label=(c,o)=>c==='vouching'?`${o.type} vouching · ${fmtMonth(o.period)}`:c==='observations'?`Observation · ${o.cat||''}${o.vno?' #'+o.vno:''}`:c==='gst'?`${o.form} · ${(ST().ents.find(e=>slug(e.key)===o.id.split('__')[0])||{}).name||''} · ${fmtMonth(o.period)}`:c==='tasks'?(o.kind==='target'?'Target: ':'')+o.title:c==='log'?'Daily tracker: '+o.work:'Settings';
+  const label=(c,o)=>c==='vouching'?`${o.type} vouching · ${fmtMonth(o.period)}`:c==='observations'?`Observation · ${o.cat||''}${o.vno?' #'+o.vno:''}`:c==='gst'?`${o.form} · ${(ST().ents.find(e=>slug(e.key)===o.id.split('__')[0])||{}).name||''} · ${fmtMonth(o.period)}`:c==='comp'?`${o.form} · ${(ST().ents.find(e=>e.key===o.ent)||{}).name||''} · ${o.period||''}`:c==='tasks'?(o.kind==='target'?'Target: ':'')+o.title:c==='log'?'Daily tracker: '+o.work:'Settings';
   COLS.forEach(c=>Object.values(S[c]).forEach(o=>(o.hist||[]).slice(0,3).forEach(h=>out.push({c,o,h,lab:label(c,o)}))));
   return out.sort((a,b)=>b.h.at-a.h.at).slice(0,n);
 }
 function chText(c){const f=c.f.startsWith('outlets.')?c.f.slice(8):(LAB[c.f]||c.f);return`${esc(f)}: ${c.from===''?'<i class="muted">blank</i>':`<s>${esc(c.from)}</s>`} → ${c.to===''?'<i class="muted">blank</i>':`<ins>${esc(c.to)}</ins>`}`}
-const LAB={status:'Status',assignee:'Assigned to',total:'Total vouchers',checked:'Vouchers checked',range:'Period covered',remarks:'Remarks',area:'Vouching area',cat:'Category',outlet:'Outlet',date:'Date',vno:'Voucher / bill no.',amount:'Amount',text:'Observation',action:'Action / reply',due:'Due date',ref:'ARN / challan',doneOn:'Done on',title:'Task',priority:'Priority',notes:'Notes',done:'Done',work:'Work',name:'Name',hours:'Hours',place:'Place',deleted:'Deleted',pin:'PIN',team:'Team',outlets:'Outlets',vTypes:'Vouching types',oCats:'Observation categories',ents:'GST entities',places:'Places','due.m1':'GSTR-1 due day','due.m3b':'GSTR-3B due day','due.q1':'QRMP GSTR-1 due day','due.q3b':'QRMP GSTR-3B due day','due.pmt':'PMT-06 due day',doneDate:'Done on'};
+const LAB={client:'Client',desig:'Designation',from:'Audit period from',to:'Audit period to',clients:'Clients',desigs:'Designations',comp:'Compliance list',lastBackup:'Last backup',lastBackupBy:'Backup by',status:'Status',assignee:'Assigned to',total:'Total vouchers',checked:'Vouchers checked',range:'Period covered',remarks:'Remarks',area:'Vouching area',cat:'Category',outlet:'Outlet',date:'Date',vno:'Voucher / bill no.',amount:'Amount',text:'Observation',action:'Action / reply',due:'Due date',ref:'ARN / challan',doneOn:'Done on',title:'Task',priority:'Priority',notes:'Notes',done:'Done',work:'Work',name:'Name',hours:'Hours',place:'Place',deleted:'Deleted',pin:'PIN',team:'Team',outlets:'Outlets',vTypes:'Vouching types',oCats:'Observation categories',ents:'GST entities',places:'Places','due.m1':'GSTR-1 due day','due.m3b':'GSTR-3B due day','due.q1':'QRMP GSTR-1 due day','due.q3b':'QRMP GSTR-3B due day','due.pmt':'PMT-06 due day',doneDate:'Done on'};
 
 function vHome(){
-  const gAll=gstRows(addMonth(curMonth(),-1)).filter(r=>!r.done).sort((a,b)=>a.due.localeCompare(b.due));
+  const gAll=upcoming();
   const gSoon=gAll.filter(r=>daysTo(r.due)<=7);
   const vp=curMonth();const vs=vStat(vp);
   const openObs=all('observations').filter(o=>o.status!=='Resolved');
@@ -464,21 +522,21 @@ function vHome(){
   const hr=new Date().getHours();
   return `<div class="bar"><h2 class="sec grow">Good ${hr<12?'morning':hr<17?'afternoon':'evening'}${me?', '+esc(me):''}</h2></div>
   <div class="grid g4" style="margin-bottom:14px">
-    <a class="card stat" href="#gst"><div class="l">GST due in 7 days</div><div class="n">${gSoon.length}</div><div class="s">${gAll.some(r=>daysTo(r.due)<0)?'<span class="chip c-bad">Overdue items</span>':'<span class="muted">All on time</span>'}</div></a>
+    <a class="card stat" href="#gst"><div class="l">Compliance due in 7 days</div><div class="n">${gSoon.length}</div><div class="s">${gAll.some(r=>daysTo(r.due)<0)?'<span class="chip c-bad">Overdue items</span>':'<span class="muted">All on time</span>'}</div></a>
     <a class="card stat" href="#vouching"><div class="l">Vouching · ${fmtMonth(vp)}</div><div class="n">${vs.txt}</div><div class="s muted">areas done</div></a>
     <a class="card stat" href="#observations"><div class="l">Open observations</div><div class="n">${openObs.length}</div><div class="s muted">${all('observations').length} in total</div></a>
     <a class="card stat" href="#daily"><div class="l">Today's targets</div><div class="n">${tgtDone}/${tgt.length}</div><div class="s muted">completed</div></a>
     <a class="card stat" href="#todo"><div class="l">Open pendency</div><div class="n">${pend.length}</div><div class="s">${over.length?`<span class="chip c-bad">${over.length} overdue</span>`:'<span class="muted">Nothing overdue</span>'}</div></a>
   </div>
   <div class="grid g2">
-    <div class="card"><div class="panel-title"><h3>Upcoming GST</h3><a class="btn ghost sm" href="#gst">View all</a></div>
-      <div class="list">${gAll.slice(0,6).map(r=>`<div class="item ${daysTo(r.due)<0?'stripe-bad':daysTo(r.due)<=5?'stripe-warn':''}"><div class="body"><div class="t">${esc(r.form)} · ${esc(r.ent.name)}</div><div class="meta"><span>${fmtMonth(r.period)}</span><span class="due">Due ${fmtDate(r.due)}</span>${dueChip(r.due,r.done)}</div></div></div>`).join('')||'<div class="empty">All GST work for last month is done.</div>'}</div></div>
+    <div class="card"><div class="panel-title"><h3>Upcoming compliance</h3><a class="btn ghost sm" href="#gst">View all</a></div>
+      <div class="list">${gAll.slice(0,8).map(r=>`<div class="item ${daysTo(r.due)<0?'stripe-bad':daysTo(r.due)<=5?'stripe-warn':''}"><div class="body"><div class="t">${esc(r.name)} · ${esc(r.ent.name)}</div><div class="meta"><span class="chip">${esc(r.cat)}</span><span>${esc(r.label)}</span><span class="due">Due ${fmtDate(r.due)}</span>${dueChip(r.due,r.done)}</div></div></div>`).join('')||'<div class="empty">Nothing due in the next 10 days.</div>'}</div></div>
     <div class="card"><div class="panel-title"><h3>Today's targets</h3><a class="btn ghost sm" href="#daily">Open</a></div>
       <div class="list">${tgt.map(targetItem).join('')||'<div class="empty">No targets set for today. Add them in the Daily tab.</div>'}</div></div>
     <div class="card"><div class="panel-title"><h3>Top pendency</h3><a class="btn ghost sm" href="#todo">Open</a></div>
       <div class="list">${pend.slice().sort(sortTasks).slice(0,5).map(taskItem).join('')||'<div class="empty">No open pendency.</div>'}</div></div>
     <div class="card"><div class="panel-title"><h3>Recent changes</h3></div>
-      <div class="feed">${feed.map(x=>`<div class="fi"><div class="av">${esc((x.h.by||'?').slice(0,1).toUpperCase())}</div><div><b>${esc(x.h.by)}</b> ${esc(x.h.note.charAt(0).toLowerCase()+x.h.note.slice(1))} <b>${esc(x.lab)}</b>${(x.h.ch||[]).filter(c=>c.f!=='deleted').length?`<div class="small muted">${x.h.ch.filter(c=>c.f!=='deleted').slice(0,2).map(chText).join(' · ')}</div>`:''}<div class="small muted">${fmtTime(x.h.at)}</div></div></div>`).join('')||'<div class="empty">Changes made by the team will show here.</div>'}</div></div>
+      <div class="feed">${feed.map(x=>`<div class="fi"><div class="av">${esc((x.h.by||'?').slice(0,1).toUpperCase())}</div><div><b>${esc(x.h.by)}</b>${desigOf(x.h.by)?` <span class="small muted">(${esc(desigOf(x.h.by))})</span>`:''} ${esc(x.h.note.charAt(0).toLowerCase()+x.h.note.slice(1))} <b>${esc(x.lab)}</b>${(x.h.ch||[]).filter(c=>c.f!=='deleted').length?`<div class="small muted">${x.h.ch.filter(c=>c.f!=='deleted').slice(0,2).map(chText).join(' · ')}</div>`:''}<div class="small muted">${fmtTime(x.h.at)}</div></div></div>`).join('')||'<div class="empty">Changes made by the team will show here.</div>'}</div></div>
   </div>`;
 }
 
@@ -496,7 +554,7 @@ function vVouching(){
       <div class="prog" title="${pct}%"><i style="width:${pct}%"></i></div>
       ${outs.length?`<div class="small muted">Tap an outlet to change its status</div><div class="outs">${outs.map(o=>{const s=(d.outlets||{})[o]||'Not started';return`<button class="ob s${VSTAT.indexOf(s)}" data-act="vout" data-t="${esc(t.name)}" data-o="${esc(o)}"><b>${esc(o)}</b><span>${s}</span></button>`}).join('')}</div>`:''}
       <div class="kv"><span>Vouchers checked</span><b>${chk} / ${tot||'–'}</b></div>
-      ${d.range?`<div class="kv"><span>Period covered</span><b>${esc(d.range)}</b></div>`:''}
+      ${d.from||d.to?`<div class="kv"><span>Audit period</span><b>${d.from?fmtDate(d.from):'…'} – ${d.to?fmtDate(d.to):'…'}</b></div>`:d.range?`<div class="kv"><span>Period covered</span><b>${esc(d.range)}</b></div>`:''}
       <div class="kv"><span>Assigned to</span><b>${esc(d.assignee)||'–'}</b></div>
       <div class="kv"><span>Observations</span><b>${obs.length} (${obs.filter(o=>o.status!=='Resolved').length} open)</b></div>
       ${d.remarks?`<div class="small muted" style="margin-top:6px;white-space:pre-wrap">${esc(d.remarks)}</div>`:''}
@@ -542,38 +600,45 @@ function vObs(){
 }
 
 function vGst(){
-  const p=U.gPeriod;const rows=gstRows(p);const st=ST();
+  const p=U.gDue;const st=ST();let rows=compRows(p);
+  const cats=['All',...COMP_CATS.filter(c=>rows.some(r=>r.cat===c))];
+  if(!cats.includes(U.compCat))U.compCat='All';
+  const R0=rows;if(U.compCat!=='All')rows=rows.filter(r=>r.cat===U.compCat);
   const body=st.ents.map(e=>{
-    const R=rows.filter(r=>r.ent.key===e.key);
-    return `<div class="card" style="margin-bottom:12px"><div class="ent-h"><b>${esc(e.name)}</b><span class="chip c-gold">${e.freq==='M'?'Monthly':'Quarterly · QRMP'}</span></div>
+    const R=rows.filter(r=>r.ent.key===e.key);if(!R.length)return'';
+    return `<div class="card" style="margin-bottom:12px"><div class="ent-h"><b>${esc(e.name)}</b><span class="chip c-gold">GST ${e.freq==='M'?'monthly':'QRMP'}</span><span class="grow"></span><span class="small muted">${R.filter(r=>r.done).length}/${R.length} done</span></div>
      <div class="list">${R.map(r=>`<div class="item ${r.done?'stripe-ok':daysTo(r.due)<0?'stripe-bad':daysTo(r.due)<=5?'stripe-warn':''}">
        <div class="body gst-row">
-         <div><div class="t">${esc(r.form)}</div><div class="small muted">${esc(r.kind)} · Due <span class="due">${fmtDate(r.due)}</span></div>${editedLine(r.doc)}</div>
+         <div><div class="t">${esc(r.name)}</div><div class="small muted"><span class="chip">${esc(r.cat)}</span> ${esc(r.label)}</div><div class="small muted">Due <span class="due">${fmtDate(r.due)}</span>${r.kind&&r.col==='gst'?' · '+esc(r.kind):''}</div>${editedLine(r.doc)}</div>
          <div class="mid small">${r.doc.amount!==''&&r.doc.amount!=null?`<div><b>${rupee(r.doc.amount)}</b> paid</div>`:''}${r.doc.ref?`<div class="muted">Ref: ${esc(r.doc.ref)}</div>`:''}${r.doc.doneOn?`<div class="muted">On ${fmtDate(r.doc.doneOn)}</div>`:''}${r.doc.remarks?`<div class="muted">${esc(r.doc.remarks)}</div>`:''}</div>
-         <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">${statusChip(r.status)}${dueChip(r.due,r.done)}<div style="display:flex;gap:6px">${r.doc.hist?histBtn('gst',r.id):''}<button class="btn ghost sm" data-act="gedit" data-id="${r.id}">Update</button></div></div>
+         <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">${statusChip(r.status)}${dueChip(r.due,r.done)}<div style="display:flex;gap:6px">${r.doc.hist?histBtn(r.col,r.id):''}<button class="btn ghost sm" data-act="gedit" data-id="${esc(r.id)}">Update</button></div></div>
        </div></div>`).join('')}</div></div>`}).join('');
-  const qEnd=[3,6,9,12].includes(+p.split('-')[1]);
-  return `<div class="bar"><h2 class="sec grow">GST Payment & Returns</h2></div>
-   ${monthStrip(p,gstStat,'gmon')}
-   <p class="small muted" style="margin:-2px 0 12px">Return period <b>${fmtMonth(p)}</b>, due in ${fmtMonth(addMonth(p,1))}. ${qEnd?'Quarter-end month: QRMP quarterly returns are due.':'QRMP: PMT-06 payment is due for this month.'}</p>
-   ${body}
-   <div class="note">Due dates follow the standard GST calendar (GSTR-1 11th, GSTR-3B 20th; QRMP PMT-06 25th, GSTR-1 13th, GSTR-3B 24th for Rajasthan). If a date is extended, change it in Settings for every month, or tap "Update" to change it for one return.</div>`;
+  return `<div class="bar"><h2 class="sec grow">Compliance</h2><a class="btn ghost sm" href="#settings" data-act="tocomp">Edit compliance list</a></div>
+   ${monthStrip(p,compStat,'gmon')}
+   <p class="small muted" style="margin:-2px 0 10px">Everything <b>due in ${fmtMonth(p)}</b>: GST for ${fmtMonth(addMonth(p,-1))}, TDS, PF/ESI, income tax, ROC and other dates.</p>
+   <div class="chips" style="margin-bottom:12px">${cats.map(c=>`<button data-act="ccat" data-v="${esc(c)}" class="${U.compCat===c?'on':''}">${esc(c)}<span class="ct">${(c==='All'?R0:R0.filter(r=>r.cat===c)).filter(r=>!r.done).length}</span></button>`).join('')}</div>
+   ${body||'<div class="empty">Nothing due in this month for this filter.</div>'}
+   <div class="note">Dates follow the standard calendar under the Income-tax Act, 2025 (Forms 138/140/143 replace 24Q/26Q/27EQ), GST and the Companies Act. AOC-4 and MGT-7 depend on your AGM date. If a date is extended, tap "Update" to change it for one item, or change it for every year in Settings → Compliance list.</div>`;
 }
 
 function targetItem(t){
   return `<div class="item ${t.done?'done stripe-ok':''}">
     <button class="chk ${t.done?'on':''}" data-act="ttoggle" data-id="${esc(t.id)}" aria-label="${t.done?'Mark not done':'Mark done'}">${t.done?ic('check'):''}</button>
-    <div class="body"><div class="t">${esc(t.title)}</div><div class="meta">${t.assignee?`<span>Assigned: ${esc(t.assignee)}</span>`:''}${editedLine(t)}</div></div>
+    <div class="body"><div class="t">${esc(t.title)}</div><div class="meta">${t.client?`<span class="chip c-info">${esc(t.client)}</span>`:''}${t.assignee?`<span>Assigned: ${esc(t.assignee)}</span>`:''}${editedLine(t)}</div></div>
     <button class="btn ghost sm" data-act="tedit" data-id="${esc(t.id)}">${ic('edit')}Edit</button></div>`;
 }
+const clientSel=(id,val,blank)=>`<select class="inp" id="${id}" aria-label="Client" style="flex:0 1 170px">${blank?'<option value="">Client…</option>':''}${ST().clients.map(c=>`<option ${c===val?'selected':''}>${esc(c)}</option>`).join('')}</select>`;
 function vDaily(){
+  const seg=`<div class="seg"><button data-act="dmode" data-v="day" class="${U.dMode==='day'?'on':''}">Day view</button><button data-act="dmode" data-v="time" class="${U.dMode==='time'?'on':''}">Time report</button></div>`;
+  if(U.dMode==='time')return vTime(seg);
   const d=U.dDate, st=ST();
   const T=all('tasks').filter(t=>t.kind==='target'&&t.date===d).sort((a,b)=>(a.done-b.done)||(a.at||0)-(b.at||0));
   const done=T.filter(t=>t.done).length, pct=T.length?Math.round(done/T.length*100):0;
   const prevOpen=all('tasks').filter(t=>t.kind==='target'&&t.date<d&&!t.done&&t.date>=addDay(d,-7));
   const L=all('log').filter(l=>l.date===d).sort((a,b)=>(a.at||0)-(b.at||0));
   const hrs=L.reduce((s,l)=>s+(+l.hours||0),0);
-  return `<div class="bar"><h2 class="sec grow">Daily Target & Tracker</h2>
+  return `<div class="bar"><h2 class="sec grow">Daily Target & Tracker</h2>${seg}</div>
+   <div class="bar">
      <button class="btn ghost sm" data-act="dday" data-k="-1" aria-label="Previous day">${ic('l')}</button>
      <input type="date" class="inp mini" id="dDate" value="${d}" aria-label="Date">
      <button class="btn ghost sm" data-act="dday" data-k="1" aria-label="Next day">${ic('r')}</button>
@@ -582,17 +647,50 @@ function vDaily(){
     <div class="card">
       <div class="panel-title"><div><h3>Daily target</h3><div class="small muted">${fmtDate(d)} · ${done} of ${T.length} done</div></div><div class="ring" style="--p:${pct}"><span>${pct}%</span></div></div>
       <div class="list">${T.map(targetItem).join('')||'<div class="empty">No targets for this day. Add one below.</div>'}</div>
-      <form class="addrow" data-form="tadd"><input class="inp" id="tTitle" placeholder="New target, e.g. Cash vouching 1–10 Nov" required aria-label="New target"><input class="inp" id="tWho" placeholder="Assigned to" style="flex:0 1 130px" list="people" aria-label="Assigned to"><button class="btn">${ic('plus')}Add</button></form>
+      <form class="addrow" data-form="tadd"><input class="inp" id="tTitle" placeholder="New target, e.g. Cash vouching 1–10 Nov" required aria-label="New target">${clientSel('tClient',st.clients[0])}<input class="inp" id="tWho" placeholder="Assigned to" style="flex:0 1 130px" list="people" aria-label="Assigned to"><button class="btn">${ic('plus')}Add</button></form>
       ${prevOpen.length?`<div class="note">${prevOpen.length} target(s) from the last 7 days are still open. <button class="btn sm gold" data-act="tcarry" style="margin-left:6px">Move to this day</button></div>`:''}
     </div>
     <div class="card">
-      <div class="panel-title"><div><h3>Daily tracker</h3><div class="small muted">Work done · ${L.length} entries · ${hrs} hrs</div></div></div>
-      <div class="list">${L.map(l=>`<div class="item clickable" data-act="ledit" data-id="${esc(l.id)}"><div class="body"><div class="t">${esc(l.work)}</div><div class="meta">${l.name?`<span>${esc(l.name)}</span>`:''}${l.place?`<span class="chip">${esc(l.place)}</span>`:''}${l.hours?`<span class="chip c-info">${esc(l.hours)} hr</span>`:''}</div></div></div>`).join('')||'<div class="empty">Log the work done on this day here.</div>'}</div>
-      <form class="addrow" data-form="ladd"><input class="inp" id="lWork" placeholder="Work done, e.g. Zomato settlement matched" required aria-label="Work done">
+      <div class="panel-title"><div><h3>Daily tracker</h3><div class="small muted">Work done · ${L.length} entries · ${+hrs.toFixed(2)} hrs</div></div></div>
+      <div class="list">${L.map(logItem).join('')||'<div class="empty">Log the work done on this day here.</div>'}</div>
+      <form class="addrow" data-form="ladd"><input class="inp" id="lWork" placeholder="Work done, e.g. Zomato settlement matched" required aria-label="Work done" style="flex-basis:100%">
+        ${clientSel('lClient',st.clients[0])}
         <select class="inp" id="lPlace" style="flex:0 1 130px" aria-label="Place">${st.places.map(p=>`<option>${esc(p)}</option>`).join('')}</select>
         <input class="inp" id="lHrs" type="number" step="0.25" min="0" placeholder="Hrs" style="flex:0 1 80px" aria-label="Hours"><button class="btn">${ic('plus')}Log</button></form>
+      <p class="small muted" style="margin:8px 0 0">Logged as ${withDesig(me)}</p>
     </div>
    </div>${peopleList()}`;
+}
+const logItem=l=>`<div class="item clickable" data-act="ledit" data-id="${esc(l.id)}"><div class="body"><div class="t">${esc(l.work)}</div><div class="meta">${l.name?`<span>${withDesig(l.name)}</span>`:''}${l.client?`<span class="chip c-info">${esc(l.client)}</span>`:''}${l.place?`<span class="chip">${esc(l.place)}</span>`:''}${l.hours?`<b style="color:var(--ink)">${esc(l.hours)} hr</b>`:''}</div></div></div>`;
+function timeRows(){
+  return all('log').filter(l=>(l.date||'')>=U.tFrom&&(l.date||'')<=U.tTo)
+   .filter(l=>U.tWho==='All'||l.name===U.tWho)
+   .filter(l=>U.tDesig==='All'||(l.desig||desigOf(l.name))===U.tDesig)
+   .filter(l=>U.tClient==='All'||l.client===U.tClient)
+   .sort((a,b)=>(a.date||'').localeCompare(b.date||'')||(a.at||0)-(b.at||0));
+}
+function vTime(seg){
+  const st=ST();const L=timeRows();
+  const names=[...new Set([...st.team.map(t=>t.name),...all('log').map(l=>l.name).filter(Boolean)])].sort();
+  const tot=L.reduce((s,l)=>s+(+l.hours||0),0);
+  const by=(key)=>{const m={};L.forEach(l=>{const k=key(l)||'—';m[k]=m[k]||{h:0,n:0,days:new Set()};m[k].h+=+l.hours||0;m[k].n++;m[k].days.add(l.date)});return Object.entries(m).sort((a,b)=>b[1].h-a[1].h)};
+  const tbl=(title,rows,showDesig)=>`<div class="card"><h3>${title}</h3>${rows.length?`<div style="overflow-x:auto"><table class="tt"><thead><tr><th>${title==='By person'?'Person':'Client'}</th><th>Days</th><th>Entries</th><th>Hours</th></tr></thead><tbody>${rows.map(([k,v])=>`<tr><td>${showDesig?withDesig(k):esc(k)}</td><td>${v.days.size}</td><td>${v.n}</td><td><b>${+v.h.toFixed(2)}</b></td></tr>`).join('')}</tbody></table></div>`:'<div class="empty">No entries.</div>'}</div>`;
+  const byDate={};L.forEach(l=>(byDate[l.date]=byDate[l.date]||[]).push(l));
+  return `<div class="bar"><h2 class="sec grow">Time Report</h2>${seg}</div>
+   <div class="card" style="margin-bottom:12px"><div class="form" style="grid-template-columns:repeat(auto-fit,minmax(140px,1fr))">
+     <div class="field"><label for="tFrom">From</label><input class="inp" type="date" id="tFrom" value="${U.tFrom}"></div>
+     <div class="field"><label for="tTo">To</label><input class="inp" type="date" id="tTo" value="${U.tTo}"></div>
+     <div class="field"><label for="tWho">Person</label><select class="inp" id="tWho"><option value="All">Everyone</option>${names.map(n=>`<option ${U.tWho===n?'selected':''} value="${esc(n)}">${esc(n)}${desigOf(n)?' ('+esc(desigOf(n))+')':''}</option>`).join('')}</select></div>
+     <div class="field"><label for="tDesig">Designation</label><select class="inp" id="tDesig"><option value="All">All</option>${st.desigs.map(d=>`<option ${U.tDesig===d?'selected':''}>${esc(d)}</option>`).join('')}</select></div>
+     <div class="field"><label for="tCl">Client</label><select class="inp" id="tCl"><option value="All">All clients</option>${st.clients.map(c=>`<option ${U.tClient===c?'selected':''}>${esc(c)}</option>`).join('')}</select></div>
+   </div>
+   <div class="vfoot"><button class="btn ghost sm" data-act="tq" data-v="week">This week</button><button class="btn ghost sm" data-act="tq" data-v="month">This month</button><button class="btn ghost sm" data-act="tq" data-v="last">Last month</button><span class="grow"></span><button class="btn sm" data-act="xl" data-k="time">Download Excel</button></div></div>
+   <div class="grid g4" style="margin-bottom:12px">
+     <div class="card stat"><div class="l">Total hours</div><div class="n">${+tot.toFixed(2)}</div><div class="s muted">${fmtDate(U.tFrom)} – ${fmtDate(U.tTo)}</div></div>
+     <div class="card stat"><div class="l">Entries</div><div class="n">${L.length}</div><div class="s muted">${new Set(L.map(l=>l.date)).size} working days</div></div>
+   </div>
+   <div class="grid g2" style="margin-bottom:12px">${tbl('By person',by(l=>l.name),true)}${tbl('By client',by(l=>l.client))}</div>
+   <div class="card"><h3>Entries</h3>${Object.keys(byDate).length?Object.entries(byDate).map(([d,ls])=>`<div class="small" style="margin:10px 0 6px;font-weight:800;color:var(--maroon)">${fmtDate(d)} · ${+ls.reduce((s,l)=>s+(+l.hours||0),0).toFixed(2)} hrs</div><div class="list">${ls.map(logItem).join('')}</div>`).join(''):'<div class="empty">No work logged for this filter.</div>'}</div>`;
 }
 
 function sortTasks(a,b){
@@ -605,7 +703,7 @@ function taskItem(t){
    <button class="chk ${done?'on':''}" data-act="ptoggle" data-id="${esc(t.id)}" aria-label="${done?'Reopen':'Mark done'}">${done?ic('check'):''}</button>
    <div class="body"><div class="t">${esc(t.title)}</div>
    ${t.notes?`<div class="desc small muted">${esc(t.notes)}</div>`:''}
-   <div class="meta">${priChip(t.priority)}${t.status==='In progress'?statusChip('In progress'):''}${t.kind==='misc'?'<span class="chip">Misc</span>':''}${t.assignee?`<span>Assigned: ${esc(t.assignee)}</span>`:''}${t.due?`<span class="due">Due ${fmtDate(t.due)}</span>${dueChip(t.due,done)}`:''}</div>
+   <div class="meta">${priChip(t.priority)}${t.status==='In progress'?statusChip('In progress'):''}${t.kind==='misc'?'<span class="chip">Misc</span>':''}${t.client?`<span class="chip c-info">${esc(t.client)}</span>`:''}${t.assignee?`<span>Assigned: ${esc(t.assignee)}</span>`:''}${t.due?`<span class="due">Due ${fmtDate(t.due)}</span>${dueChip(t.due,done)}`:''}</div>
    <div class="meta">${editedLine(t)}</div></div></div>`;
 }
 function vTodo(){
@@ -624,32 +722,44 @@ function vSettings(){
   const st=ST();
   const delItems=[];COLS.forEach(c=>Object.values(S[c]).forEach(o=>{if(o.deleted)delItems.push({c,o})}));
   delItems.sort((a,b)=>(b.o.at||0)-(a.o.at||0));
-  const delLabel=(c,o)=>c==='observations'?`Observation: ${o.text}`:c==='tasks'?`${o.kind==='target'?'Target':'To-do'}: ${o.title}`:c==='log'?`Tracker: ${o.work}`:c==='vouching'?`${o.type} vouching ${fmtMonth(o.period)}`:c==='gst'?`${o.form} ${fmtMonth(o.period)}`:c;
+  const delLabel=(c,o)=>c==='observations'?`Observation: ${o.text}`:c==='tasks'?`${o.kind==='target'?'Target':'To-do'}: ${o.title}`:c==='log'?`Tracker: ${o.work}`:c==='vouching'?`${o.type} vouching ${fmtMonth(o.period)}`:c==='gst'?`${o.form} ${fmtMonth(o.period)}`:c==='comp'?`${o.form} ${o.period||''}`:c;
   const sh=S.settings.main;
+  const sched=it=>it.type==='M'?`Monthly, ${it.day}th of next month${it.mar?` (March: ${it.mar})`:''}`:(it.dates||[]).map(x=>String(x).split('|')[0].trim()).join(', ');
   return `<div class="bar"><h2 class="sec grow">Settings</h2>${sh&&sh.hist?histBtn('settings','main'):''}</div>
   <div class="grid g2">
    <div class="card setsec"><h3>You</h3>
-     <div class="kv"><span>Signed in as</span><b>${esc(me)||'–'}</b></div>
+     <div class="kv"><span>Signed in as</span><b>${withDesig(me)||'–'}</b></div>
      <div class="vfoot"><button class="btn ghost sm" data-act="switch">Switch user</button></div>
      <p class="small muted">Your name is saved with every change, so the team can see who updated what.</p>
    </div>
    <div class="card setsec"><h3>Team PIN</h3><p class="help">Everyone needs this PIN to open the tracker. Changing it asks everyone to enter the new PIN.</p>
      <div class="addrow" style="margin-top:0"><input class="inp" id="sPin" value="${esc(st.pin)}" inputmode="numeric" aria-label="Team PIN"><button class="btn" data-act="spin">Save PIN</button></div>
    </div>
+   <div class="card setsec"><h3>Team & designation</h3><p class="help">People are added here on their first sign-in. Change a designation any time.</p>
+     <div id="teamRows">${st.team.map(t=>teamRow(t)).join('')}</div>
+     <div class="vfoot"><button class="btn ghost sm" data-act="teamadd">${ic('plus')}Add person</button><span class="grow"></span><button class="btn" data-act="steam">Save team</button></div>
+   </div>
    <div class="card setsec"><h3>Lists</h3><p class="help">One item per line. These lists fill the drop-downs and outlet buttons.</p>
      <div class="form">
-       <div class="field"><label for="sTeam">Team members</label><textarea class="inp" id="sTeam">${esc(st.team.join('\n'))}</textarea></div>
+       <div class="field"><label for="sClients">Clients</label><textarea class="inp" id="sClients">${esc(st.clients.join('\n'))}</textarea></div>
+       <div class="field"><label for="sDesigs">Designations</label><textarea class="inp" id="sDesigs">${esc(st.desigs.join('\n'))}</textarea></div>
        <div class="field"><label for="sOut">Outlets</label><textarea class="inp" id="sOut">${esc(st.outlets.join('\n'))}</textarea></div>
-       <div class="field"><label for="sCats">Observation categories</label><textarea class="inp" id="sCats" style="min-height:150px">${esc(st.oCats.join('\n'))}</textarea></div>
        <div class="field"><label for="sPlaces">Work places (daily tracker)</label><textarea class="inp" id="sPlaces">${esc(st.places.join('\n'))}</textarea></div>
+       <div class="field full"><label for="sCats">Observation categories</label><textarea class="inp" id="sCats" style="min-height:120px">${esc(st.oCats.join('\n'))}</textarea></div>
      </div>
      <div class="vfoot"><button class="btn" data-act="slists">Save lists</button></div>
+   </div>
+   <div class="card setsec" id="compSet" style="grid-column:1/-1"><h3>Compliance list</h3><p class="help">These show in the Compliance tab every month. Tick the entities each one applies to. GST returns come from the GST settings below.</p>
+     <div class="list">${st.comp.map(it=>`<div class="item ${it.off?'done':''}"><div class="body"><div class="t">${esc(it.name)}</div><div class="meta"><span class="chip">${esc(it.cat)}</span><span>${esc(sched(it))}</span></div>
+       <div class="meta">${(it.ents||[]).length?(it.ents||[]).map(k=>`<span class="chip c-gold">${esc((st.ents.find(e=>e.key===k)||{name:k}).name)}</span>`).join(''):'<span class="chip c-warn">Not applied to any entity</span>'}${it.off?'<span class="chip">Turned off</span>':''}</div></div>
+       <button class="btn ghost sm" data-act="cmedit" data-id="${esc(it.id)}">${ic('edit')}Edit</button></div>`).join('')}</div>
+     <div class="vfoot"><button class="btn sm" data-act="cmedit">${ic('plus')}Add compliance</button><span class="grow"></span><button class="btn ghost sm" data-act="cmreset">Add missing default items</button></div>
    </div>
    <div class="card setsec"><h3>Vouching types</h3><p class="help">Tick "Outlet-wise" to track that vouching separately for each outlet.</p>
      <div id="vtRows">${st.vTypes.map(v=>vtRow(v.name,v.ow)).join('')}</div>
      <div class="vfoot"><button class="btn ghost sm" data-act="vtadd">${ic('plus')}Add type</button><span class="grow"></span><button class="btn" data-act="svt">Save types</button></div>
    </div>
-   <div class="card setsec"><h3>GST entities</h3><p class="help">Monthly = GSTR-1 and GSTR-3B every month. QRMP = PMT-06 in the first two months, returns at quarter end.</p>
+   <div class="card setsec"><h3>GST entities</h3><p class="help">Monthly = GSTR-1 and GSTR-3B every month. QRMP = PMT-06 in the first two months, returns at quarter end. These entities are also used in the compliance list.</p>
      <div id="entRows">${st.ents.map(e=>entRow(e)).join('')}</div>
      <div class="vfoot"><button class="btn ghost sm" data-act="entadd">${ic('plus')}Add entity</button><span class="grow"></span><button class="btn" data-act="sents">Save entities</button></div>
    </div>
@@ -657,17 +767,18 @@ function vSettings(){
      <div class="duegrid">${[['m1','GSTR-1 (monthly)'],['m3b','GSTR-3B (monthly)'],['pmt','PMT-06 (QRMP)'],['q1','GSTR-1 (QRMP)'],['q3b','GSTR-3B (QRMP)']].map(([k,l])=>`<div class="field"><label for="d_${k}">${l}</label><input class="inp" id="d_${k}" type="number" min="1" max="31" value="${esc(st.due[k])}"></div>`).join('')}</div>
      <div class="vfoot"><button class="btn" data-act="sdue">Save due days</button></div>
    </div>
-   <div class="card setsec"><h3>Backup & export</h3><p class="help">Download a full backup now and then, and keep it safe. Excel files open the lists as spreadsheets.</p>
+   <div class="card setsec"><h3>Backup & Excel</h3><p class="help">The Excel backup has one sheet per section and can also be used to restore everything. Last backup: <b>${st.lastBackup?fmtTime(st.lastBackup)+' by '+esc(st.lastBackupBy||''):'never'}</b></p>
      <div class="vfoot">
-       <button class="btn" data-act="backup">Download backup</button>
+       <button class="btn" data-act="xl" data-k="all">Download Excel backup</button>
+       <button class="btn ghost" data-act="backup">JSON backup</button>
        <button class="btn ghost" data-act="restoreFile">Restore from backup</button>
      </div>
      <div class="vfoot">
-       <button class="btn ghost sm" data-act="csv" data-k="observations">Observations (Excel)</button>
-       <button class="btn ghost sm" data-act="csv" data-k="gst">GST (Excel)</button>
-       <button class="btn ghost sm" data-act="csv" data-k="vouching">Vouching (Excel)</button>
-       <button class="btn ghost sm" data-act="csv" data-k="tasks">Targets & to-do (Excel)</button>
-       <button class="btn ghost sm" data-act="csv" data-k="log">Daily tracker (Excel)</button>
+       <button class="btn ghost sm" data-act="xl" data-k="observations">Observations</button>
+       <button class="btn ghost sm" data-act="xl" data-k="compliance">Compliance</button>
+       <button class="btn ghost sm" data-act="xl" data-k="vouching">Vouching</button>
+       <button class="btn ghost sm" data-act="xl" data-k="tasks">Targets & to-do</button>
+       <button class="btn ghost sm" data-act="xl" data-k="time">Time report</button>
      </div>
    </div>
    <div class="card setsec"><h3>Deleted items</h3><p class="help">Deleted entries stay here so they can be brought back.</p>
@@ -675,13 +786,40 @@ function vSettings(){
    </div>
   </div>`;
 }
+const teamRow=t=>`<div class="rowed"><input class="inp tmN" value="${esc(t.name||'')}" placeholder="Name" aria-label="Name"><select class="inp tmD" style="flex:0 0 120px" aria-label="Designation"><option value="">—</option>${ST().desigs.map(d=>`<option ${t.desig===d?'selected':''}>${esc(d)}</option>`).join('')}</select><button class="btn danger sm" data-act="rowdel" aria-label="Remove">✕</button></div>`;
+function compForm(id){
+  const st=ST();const it=id?st.comp.find(x=>x.id===id):{id:'',name:'',cat:'Other',type:'D',dates:[],ents:['DMB'],day:15};
+  openSheet(`<h3>${id?'Edit compliance':'Add compliance'}</h3>
+   <form id="cmform"><div class="form">
+    <div class="field full"><label for="cmName">Name</label><input class="inp" id="cmName" required value="${esc(it.name)}" placeholder="e.g. Professional tax"></div>
+    <div class="field"><label for="cmCat">Category</label><select class="inp" id="cmCat">${COMP_CATS.map(c=>`<option ${it.cat===c?'selected':''}>${c}</option>`).join('')}</select></div>
+    <div class="field"><label for="cmType">Repeats</label><select class="inp" id="cmType"><option value="M" ${it.type==='M'?'selected':''}>Every month</option><option value="D" ${it.type!=='M'?'selected':''}>On fixed dates each year</option></select></div>
+    <div class="field cmM"><label for="cmDay">Due day of next month</label><input class="inp" id="cmDay" type="number" min="1" max="31" value="${esc(it.day||15)}"></div>
+    <div class="field cmM"><label for="cmMar">March due date (DD-MM, optional)</label><input class="inp" id="cmMar" value="${esc(it.mar||'')}" placeholder="e.g. 30-04"></div>
+    <div class="field full cmD"><label for="cmDates">Due dates, one per line: DD-MM | label</label><textarea class="inp" id="cmDates" placeholder="31-07 | Q1 {FY}">${esc((it.dates||[]).join('\n'))}</textarea><span class="small muted">{FY} = the financial year of the due date, {PrevFY} = the year before it.</span></div>
+    <div class="field full"><label>Applies to</label><div style="display:flex;flex-wrap:wrap;gap:12px">${st.ents.map(e=>`<label class="tick"><input type="checkbox" class="cmE" value="${esc(e.key)}" ${(it.ents||[]).includes(e.key)?'checked':''}>${esc(e.name)}</label>`).join('')}</div></div>
+    <div class="field full"><label class="tick"><input type="checkbox" id="cmOff" ${it.off?'checked':''}>Turn off (keep in the list but hide from the calendar)</label></div>
+   </div>
+   <div class="foot">${id?'<button type="button" class="btn danger sm" id="cmDel">Delete</button>':''}<span class="grow"></span><button type="button" class="btn ghost" data-act="mclose">Cancel</button><button class="btn">Save</button></div></form>`);
+  const sync=()=>{const m=$('#cmType').value==='M';document.querySelectorAll('.cmM').forEach(x=>x.style.display=m?'':'none');document.querySelectorAll('.cmD').forEach(x=>x.style.display=m?'none':'')};
+  $('#cmType').onchange=sync;sync();
+  if(id)$('#cmDel').onclick=async function(){if(!this.dataset.sure){this.dataset.sure=1;this.textContent='Tap again to delete';return}closeForm();await saveSettings({comp:st.comp.filter(x=>x.id!==id)},'Compliance removed')};
+  $('#cmform').onsubmit=async ev=>{ev.preventDefault();ev.stopPropagation();
+    const n={id:it.id||('c'+Date.now().toString(36)),name:$('#cmName').value.trim(),cat:$('#cmCat').value,type:$('#cmType').value,ents:[...document.querySelectorAll('.cmE:checked')].map(x=>x.value)};
+    if(!n.name){toast('Enter a name');return}
+    if(n.type==='M'){n.day=+$('#cmDay').value;if(!(n.day>=1&&n.day<=31)){toast('Due day must be 1 to 31');return}const mr=$('#cmMar').value.trim();if(mr){if(!dm2md(mr)){toast('March date must be like 30-04');return}n.mar=mr}}
+    else{n.dates=$('#cmDates').value.split('\n').map(x=>x.trim()).filter(Boolean);const bad=n.dates.find(x=>!dm2md(x.split('|')[0]));if(!n.dates.length||bad){toast(bad?`Check the date "${bad}" (use DD-MM)`:'Add at least one due date');return}}
+    if($('#cmOff').checked)n.off=true;if(it.note)n.note=it.note;
+    const list=clone(st.comp);const i=list.findIndex(x=>x.id===n.id);if(i>=0)list[i]=n;else list.push(n);
+    closeForm();await saveSettings({comp:list},'Compliance list saved')};
+}
 const vtRow=(n,ow)=>`<div class="rowed"><input class="inp vtN" value="${esc(n)}" placeholder="e.g. Sales" aria-label="Vouching type"><label class="tick"><input type="checkbox" class="vtO" ${ow?'checked':''}>Outlet-wise</label><button class="btn danger sm" data-act="rowdel" aria-label="Remove">✕</button></div>`;
 const entRow=e=>`<div class="rowed" data-key="${esc(e.key||'')}"><input class="inp enN" value="${esc(e.name||'')}" placeholder="Entity name" aria-label="Entity name"><select class="inp enF" style="flex:0 0 112px" aria-label="Frequency"><option value="M" ${e.freq==='M'?'selected':''}>Monthly</option><option value="Q" ${e.freq==='Q'?'selected':''}>QRMP</option></select><button class="btn danger sm" data-act="rowdel" aria-label="Remove">✕</button></div>`;
 const lines=id=>$(id).value.split('\n').map(s=>s.trim()).filter(Boolean).filter((v,i,a)=>a.indexOf(v)===i);
 async function saveSettings(patch,msg){const cur=S.settings.main||{};if(await save('settings','main',{...clone(cur),...patch}))toast(msg||'Settings saved')}
 
 function people(){
-  const s=new Set(ST().team);
+  const s=new Set(ST().team.map(t=>t.name));
   all('tasks').forEach(t=>t.assignee&&s.add(t.assignee));all('observations').forEach(o=>o.assignee&&s.add(o.assignee));
   all('log').forEach(l=>l.name&&s.add(l.name));all('vouching').forEach(v=>v.assignee&&s.add(v.assignee));
   return [...s].sort();
@@ -740,7 +878,7 @@ function taskForm(t,kind){
   const k=t?t.kind:kind;
   openForm({title:t?'Edit '+(k==='misc'?'misc work':'pendency'):(k==='misc'?'Add misc work':'Add pendency'),histCol:'tasks',histId:t&&t.id,
     data:t||{priority:'Medium',status:'Pending',kind:k},
-    fields:[{k:'title',label:'Task',full:true,req:true,ph:'e.g. Collect TDS 26Q data'},{k:'assignee',label:'Assigned to',list:true},{k:'due',label:'Due date',type:'date'},
+    fields:[{k:'title',label:'Task',full:true,req:true,ph:'e.g. Collect TDS data for Form 140'},{k:'client',label:'Client',type:'select',options:['',...ST().clients]},{k:'assignee',label:'Assigned to',list:true},{k:'due',label:'Due date',type:'date'},
       {k:'priority',label:'Priority',type:'select',options:PRI},{k:'status',label:'Status',type:'select',options:TSTAT},
       {k:'kind',label:'List',type:'select',options:[['pendency','Other pendency'],['misc','Miscellaneous']]},{k:'notes',label:'Notes',type:'textarea',full:true}],
     onSave:v=>save('tasks',t&&t.id,{...(t?clone(t):{}),...v}),
@@ -749,17 +887,43 @@ function taskForm(t,kind){
 
 /* ================= EXPORT ================= */
 function download(name,text,type){const b=new Blob([text],{type});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1000)}
-function csv(rows){return '﻿'+rows.map(r=>r.map(v=>{v=v==null?'':String(v);return/[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v}).join(',')).join('\r\n')}
-function exportCsv(k){
-  let rows;const stamp=today();
-  if(k==='observations')rows=[['Date','Area','Category','Outlet','Voucher no.','Amount','Observation','Action','Status','Assigned to','Last updated by']].concat(all('observations').sort((a,b)=>(a.date||'').localeCompare(b.date||'')).map(o=>[o.date,o.area,o.cat,o.outlet,o.vno,o.amount,o.text,o.action,o.status,o.assignee,o.by]));
-  if(k==='gst'){rows=[['Entity','Return','Period','Due date','Status','Amount','ARN / challan','Done on','Remarks','Last updated by']];
-    const ps=new Set(all('gst').map(g=>g.period));ps.add(addMonth(curMonth(),-1));[...ps].sort().forEach(p=>gstRows(p).forEach(r=>rows.push([r.ent.name,r.form,fmtMonth(p),r.due,r.status,r.doc.amount,r.doc.ref,r.doc.doneOn,r.doc.remarks,r.doc.by])))}
-  if(k==='vouching'){rows=[['Month','Type','Status','Outlets','Total vouchers','Checked','Period covered','Assigned to','Remarks']];
-    const st=ST();all('vouching').sort((a,b)=>(a.period||'').localeCompare(b.period||'')).forEach(d=>{const t=st.vTypes.find(x=>x.name===d.type)||{name:d.type};rows.push([fmtMonth(d.period),d.type,vStatus(t,d),Object.entries(d.outlets||{}).map(([o,s])=>o+': '+s).join('; '),d.total,d.checked,d.range,d.assignee,d.remarks])})}
-  if(k==='tasks')rows=[['List','Task','Date / due','Assigned to','Priority','Status','Notes']].concat(all('tasks').map(t=>[t.kind==='target'?'Daily target':t.kind==='misc'?'Miscellaneous':'Other pendency',t.title,t.kind==='target'?t.date:t.due,t.assignee,t.priority,t.kind==='target'?(t.done?'Done':'Pending'):t.status,t.notes]));
-  if(k==='log')rows=[['Date','Name','Work','Place','Hours']].concat(all('log').sort((a,b)=>(a.date||'').localeCompare(b.date||'')).map(l=>[l.date,l.name,l.work,l.place,l.hours]));
-  download(`DMB_${k}_${stamp}.csv`,csv(rows),'text/csv;charset=utf-8');
+function backupObj(){const data={};COLS.forEach(c=>data[c]=S[c]);return{app:APP,saved:new Date().toISOString(),data}}
+async function markBackup(){const cur=S.settings.main||{};try{await db.set('settings','main',{...clone(cur),lastBackup:Date.now(),lastBackupBy:me})}catch(e){}}
+let xlsxP=null;
+function loadXLSX(){if(window.XLSX)return Promise.resolve();if(xlsxP)return xlsxP;
+  const urls=['https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js','https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js'];
+  xlsxP=new Promise((res,rej)=>{const tryU=i=>{if(i>=urls.length){xlsxP=null;rej();return}const sc=document.createElement('script');sc.src=urls[i];sc.onload=res;sc.onerror=()=>{sc.remove();tryU(i+1)};document.head.appendChild(sc)};tryU(0)});return xlsxP}
+function sheetRows(k){
+  const st=ST();
+  if(k==='observations')return[['Date','Vouching area','Category','Outlet','Voucher / bill no.','Amount','Observation','Action / reply','Status','Assigned to','Last updated by']].concat(all('observations').sort((a,b)=>(a.date||'').localeCompare(b.date||'')).map(o=>[o.date,o.area,o.cat,o.outlet,o.vno,o.amount,o.text,o.action,o.status,o.assignee,o.by]));
+  if(k==='compliance'){const rows=[['Due date','Entity','Category','Compliance','Period','Status','Amount paid','ARN / challan','Done on','Remarks','Last updated by']];
+    const fy=fyOf(curMonth());for(let i=0;i<14;i++){const m=addMonth(`${fy}-04`,i);compRows(m).forEach(r=>rows.push([r.due,r.ent.name,r.cat,r.name,r.label,r.status,r.doc.amount,r.doc.ref,r.doc.doneOn,r.doc.remarks,r.doc.by]))}return rows}
+  if(k==='vouching'){const rows=[['Month','Vouching','Status','Outlets','Audit period from','Audit period to','Total vouchers','Checked','Assigned to','Remarks']];
+    all('vouching').sort((a,b)=>(a.period||'').localeCompare(b.period||'')).forEach(d=>{const t=st.vTypes.find(x=>x.name===d.type)||{name:d.type};rows.push([fmtMonth(d.period),d.type,vStatus(t,d),Object.entries(d.outlets||{}).map(([o,s])=>o+': '+s).join('; '),d.from||d.range||'',d.to,d.total,d.checked,d.assignee,d.remarks])});return rows}
+  if(k==='tasks')return[['List','Task','Client','Date / due','Assigned to','Priority','Status','Notes']].concat(all('tasks').map(t=>[t.kind==='target'?'Daily target':t.kind==='misc'?'Miscellaneous':'Other pendency',t.title,t.client,t.kind==='target'?t.date:t.due,t.assignee,t.priority,t.kind==='target'?(t.done?'Done':'Pending'):t.status,t.notes]));
+  if(k==='time'||k==='log'){const L=k==='time'?timeRows():all('log').sort((a,b)=>(a.date||'').localeCompare(b.date||''));
+    return[['Date','Name','Designation','Client','Work done','Place','Hours']].concat(L.map(l=>[l.date,l.name,l.desig||desigOf(l.name),l.client,l.work,l.place,l.hours===''?'':+l.hours]))}
+  if(k==='team')return[['Name','Designation']].concat(st.team.map(t=>[t.name,t.desig]));
+}
+async function exportExcel(k){
+  try{toast('Preparing Excel…');await loadXLSX()}catch(e){toast('Could not load the Excel tool. Check the internet.');return}
+  const wb=XLSX.utils.book_new();
+  const add=(name,rows)=>{const ws=XLSX.utils.aoa_to_sheet(rows);ws['!cols']=rows[0].map((h,i)=>({wch:Math.min(50,Math.max(10,...rows.slice(0,200).map(r=>String(r[i]==null?'':r[i]).length))+2)}));XLSX.utils.book_append_sheet(wb,ws,name)};
+  const names={observations:'Observations',compliance:'Compliance',vouching:'Vouching',tasks:'Targets & To-do',time:'Time report',log:'Daily tracker',team:'Team'};
+  let file;
+  if(k==='all'){['compliance','vouching','observations','tasks','log','team'].forEach(x=>add(names[x],sheetRows(x)));
+    const js=JSON.stringify(backupObj());const chunks=[['DMB Work Tracker restore data. Do not edit this sheet.']];for(let i=0;i<js.length;i+=30000)chunks.push([js.slice(i,i+30000)]);
+    add('_restore',chunks);wb.Workbook={Sheets:wb.SheetNames.map(n=>({name:n,Hidden:n==='_restore'?1:0}))};
+    file=`DMB_Tracker_Backup_${today()}.xlsx`;markBackup();
+  } else {add(names[k],sheetRows(k));file=`DMB_${names[k].replace(/[^A-Za-z]+/g,'_')}_${k==='time'?U.tFrom+'_to_'+U.tTo:today()}.xlsx`}
+  XLSX.writeFile(wb,file);
+}
+function restoreFrom(o){
+  if(!o||o.app!==APP||!o.data){toast('This is not a DMB Work Tracker backup');return}
+  const n=COLS.reduce((s,c)=>s+Object.keys(o.data[c]||{}).length,0);
+  confirmSheet(`Restore ${n} records from the backup of ${esc(String(o.saved||'').slice(0,10))}? Records with the same ID will be replaced; newer records not in the backup stay as they are.`,'Restore',async()=>{
+    let k=0;for(const c of COLS)for(const [id,d] of Object.entries(o.data[c]||{})){const b={...d};delete b.id;try{await db.set(c,id,b);k++}catch(x){fail(x);return}}
+    toast(`${k} records restored`)});
 }
 
 /* ================= EVENTS ================= */
@@ -773,9 +937,15 @@ document.addEventListener('click',async e=>{
    case 'undo':closeForm();await undo(el.dataset.col,id,+el.dataset.i);break;
    case 'restore':await restore(el.dataset.col,id);break;
    case 'vmon':U.vPeriod=el.dataset.p||addMonth(U.vPeriod,+el.dataset.k);render();break;
-   case 'gmon':U.gPeriod=el.dataset.p||addMonth(U.gPeriod,+el.dataset.k);render();break;
+   case 'gmon':U.gDue=el.dataset.p||addMonth(U.gDue,+el.dataset.k);render();break;
+   case 'ccat':U.compCat=el.dataset.v;render();break;
+   case 'tocomp':setTimeout(()=>{const c=$('#compSet');c&&c.scrollIntoView({block:'start'})},80);break;
    case 'dday':U.dDate=addDay(U.dDate,+el.dataset.k);render();break;
    case 'dtoday':U.dDate=today();render();break;
+   case 'dmode':U.dMode=el.dataset.v;render();break;
+   case 'tq':{const v=el.dataset.v,t=today();if(v==='week'){const d=new Date(t+'T00:00:00');const k=(d.getDay()+6)%7;U.tFrom=addDay(t,-k);U.tTo=t}
+     else if(v==='month'){U.tFrom=curMonth()+'-01';U.tTo=t}else{const p=addMonth(curMonth(),-1);U.tFrom=p+'-01';U.tTo=`${p}-${pad(lastDay(+p.slice(0,4),+p.slice(5)))}`}render();break;}
+   case 'xl':exportExcel(el.dataset.k);break;
    case 'vout':{
      const t=el.dataset.t,o=el.dataset.o,did=vId(t,U.vPeriod),d=clone(S.vouching[did]||{type:t,period:U.vPeriod});
      d.outlets=d.outlets||{};const cur=d.outlets[o]||'Not started';d.outlets[o]=VSTAT[(VSTAT.indexOf(cur)+1)%3];
@@ -784,8 +954,8 @@ document.addEventListener('click',async e=>{
      const t=el.dataset.t,tt=ST().vTypes.find(x=>x.name===t)||{},did=vId(t,U.vPeriod),d=S.vouching[did];
      const fields=[...(tt.ow&&ST().outlets.length?[]:[{k:'status',label:'Status',type:'select',options:VSTAT}]),{k:'assignee',label:'Assigned to',list:true},
          {k:'total',label:'Total vouchers',type:'number'},{k:'checked',label:'Vouchers checked',type:'number'},
-         {k:'range',label:'Period covered',ph:'e.g. 1–15 Nov',full:true},{k:'remarks',label:'Remarks',type:'textarea',full:true}];
-     openForm({title:`${t} Vouching`,sub:fmtMonth(U.vPeriod)+(tt.ow?' · outlet status is set with the outlet buttons':''),data:d||{status:'Not started'},histCol:'vouching',histId:did,
+         {k:'from',label:'Audit period from',type:'date'},{k:'to',label:'Audit period to',type:'date'},{k:'remarks',label:'Remarks',type:'textarea',full:true}];
+     openForm({title:`${t} Vouching`,sub:fmtMonth(U.vPeriod)+(tt.ow?' · outlet status is set with the outlet buttons':''),data:d||{status:'Not started',from:U.vPeriod+'-01',to:`${U.vPeriod}-${pad(lastDay(+U.vPeriod.slice(0,4),+U.vPeriod.slice(5)))}`},histCol:'vouching',histId:did,
        fields,onSave:v=>save('vouching',did,{type:t,period:U.vPeriod,...(d?clone(d):{}),...v})});
      break;}
    case 'oadd':obsForm(null,el.dataset.area||(U.obsArea!=='All'?U.obsArea:'Sales'));break;
@@ -795,26 +965,26 @@ document.addEventListener('click',async e=>{
    case 'ocat':U.obsCat=el.dataset.v;render();break;
    case 'ostat':U.obsStat=el.dataset.v;render();break;
    case 'gedit':{
-     const r=gstRows(U.gPeriod).find(x=>x.id===id);
-     openForm({title:`${r.form} · ${r.ent.name}`,sub:`Period ${fmtMonth(r.period)} · ${r.kind}`,histCol:'gst',histId:id,
+     const r=compRows(U.gDue).find(x=>x.id===id);if(!r)break;
+     openForm({title:`${r.name} · ${r.ent.name}`,sub:`${r.label}${r.kind?' · '+r.kind:''}`,histCol:r.col,histId:id,
        data:{...r.doc,status:r.status,due:r.due},
-       fields:[{k:'status',label:'Status',type:'select',options:GSTAT},{k:'due',label:'Due date',type:'date'},
+       fields:[{k:'status',label:'Status',type:'select',options:r.col==='gst'?GSTAT:CSTAT},{k:'due',label:'Due date',type:'date'},
          {k:'amount',label:'Tax paid (₹)',type:'number'},{k:'doneOn',label:'Filed / paid on',type:'date'},
          {k:'ref',label:'ARN / challan no. (CPIN / CIN)',full:true},{k:'remarks',label:'Remarks',type:'textarea',full:true}],
-       onSave:v=>{if((v.status==='Filed'||v.status==='Paid')&&!v.doneOn)v.doneOn=today();if(v.due===r.due&&!r.doc.due)delete v.due;
-         return save('gst',id,{ent:r.ent.key,form:r.form,period:r.period,...clone(r.doc),...v})}});
+       onSave:v=>{if(['Filed','Paid','Done'].includes(v.status)&&!v.doneOn)v.doneOn=today();if(v.due===r.due&&!r.doc.due)delete v.due;
+         return r.col==='gst'?save('gst',id,{ent:r.ent.key,form:r.form,period:r.period,...clone(r.doc),...v}):save('comp',id,{ent:r.ent.key,form:r.name,item:r.item,period:r.label,...clone(r.doc),...v})}});
      break;}
    case 'ttoggle':{const t=T(id);if(t)await save('tasks',id,{...clone(t),done:!t.done});break;}
    case 'tedit':{const t=T(id);openForm({title:'Edit target',data:t,histCol:'tasks',histId:id,
-       fields:[{k:'title',label:'Target',full:true,req:true},{k:'assignee',label:'Assigned to',list:true},{k:'date',label:'Date',type:'date'}],
+       fields:[{k:'title',label:'Target',full:true,req:true},{k:'client',label:'Client',type:'select',options:['',...ST().clients]},{k:'assignee',label:'Assigned to',list:true},{k:'date',label:'Date',type:'date'}],
        onSave:v=>save('tasks',id,{...clone(t),...v}),onDelete:()=>softDelete('tasks',id)});break;}
    case 'tcarry':{
      const L=all('tasks').filter(t=>t.kind==='target'&&t.date<U.dDate&&!t.done&&t.date>=addDay(U.dDate,-7));
      for(const t of L){if(!await save('tasks',t.id,{...clone(t),date:U.dDate}))break}
      toast(`${L.length} target(s) moved to ${fmtDate(U.dDate)}`);break;}
    case 'ledit':{const l=S.log[id];openForm({title:'Edit tracker entry',data:l,histCol:'log',histId:id,
-       fields:[{k:'work',label:'Work done',type:'textarea',full:true,req:true},{k:'name',label:'Name',list:true},{k:'place',label:'Place',type:'select',options:['',...ST().places]},{k:'hours',label:'Hours',type:'number'},{k:'date',label:'Date',type:'date'}],
-       onSave:v=>save('log',id,{...clone(l),...v}),onDelete:()=>softDelete('log',id)});break;}
+       fields:[{k:'work',label:'Work done',type:'textarea',full:true,req:true},{k:'client',label:'Client',type:'select',options:['',...ST().clients]},{k:'name',label:'Name',list:true},{k:'place',label:'Place',type:'select',options:['',...ST().places]},{k:'hours',label:'Hours',type:'number'},{k:'date',label:'Date',type:'date'}],
+       onSave:v=>save('log',id,{...clone(l),...v,desig:desigOf(v.name)||l.desig||''}),onDelete:()=>softDelete('log',id)});break;}
    case 'padd':taskForm(null,U.pKind);break;
    case 'pedit':taskForm(T(id));break;
    case 'ptoggle':{e.stopPropagation();const t=T(id);if(t)await save('tasks',id,{...clone(t),status:t.status==='Done'?'Pending':'Done'});break;}
@@ -823,8 +993,13 @@ document.addEventListener('click',async e=>{
    /* settings */
    case 'switch':ls.set('dmbwt_me','');me='';gate(true);break;
    case 'spin':{const p=$('#sPin').value.trim();if(p.length<4){toast('Use at least 4 digits');break}await saveSettings({pin:p},'PIN changed');ls.set('dmbwt_pin',p);break;}
-   case 'slists':{const out=lines('#sOut'),cats=lines('#sCats');if(!cats.length){toast('Add at least one category');break}
-     await saveSettings({team:lines('#sTeam'),outlets:out,oCats:cats,places:lines('#sPlaces')},'Lists saved');break;}
+   case 'slists':{const out=lines('#sOut'),cats=lines('#sCats'),cl=lines('#sClients'),ds=lines('#sDesigs');if(!cats.length||!cl.length||!ds.length){toast('Clients, designations and categories need at least one item');break}
+     await saveSettings({clients:cl,desigs:ds,outlets:out,oCats:cats,places:lines('#sPlaces')},'Lists saved');break;}
+   case 'teamadd':$('#teamRows').insertAdjacentHTML('beforeend',teamRow({}));break;
+   case 'steam':{const seen=new Set();const t=[...document.querySelectorAll('#teamRows .rowed')].map(r=>({name:r.querySelector('.tmN').value.trim(),desig:r.querySelector('.tmD').value})).filter(x=>x.name&&!seen.has(x.name.toLowerCase())&&seen.add(x.name.toLowerCase()));
+     await saveSettings({team:t},'Team saved');break;}
+   case 'cmedit':compForm(id);break;
+   case 'cmreset':{const cur=ST().comp;const add=COMP_DEF.filter(d=>!cur.some(c=>c.id===d.id));if(!add.length){toast('All default items are already in the list');break}await saveSettings({comp:[...clone(cur),...clone(add)]},`${add.length} item(s) added`);break;}
    case 'vtadd':$('#vtRows').insertAdjacentHTML('beforeend',vtRow('',false));break;
    case 'entadd':$('#entRows').insertAdjacentHTML('beforeend',entRow({freq:'M'}));break;
    case 'rowdel':el.closest('.rowed').remove();break;
@@ -833,9 +1008,8 @@ document.addEventListener('click',async e=>{
    case 'sents':{const used=new Set();const v=[...document.querySelectorAll('#entRows .rowed')].map(r=>{const name=r.querySelector('.enN').value.trim();let key=r.dataset.key||slug(name).slice(0,20);while(used.has(key))key+='1';used.add(key);return{key,name,freq:r.querySelector('.enF').value}}).filter(x=>x.name);
      if(!v.length){toast('Add at least one entity');break}await saveSettings({ents:v},'GST entities saved');break;}
    case 'sdue':{const d={};for(const k of ['m1','m3b','pmt','q1','q3b']){const n=+$('#d_'+k).value;if(!(n>=1&&n<=31)){toast('Due days must be between 1 and 31');return}d[k]=n}await saveSettings({due:d},'Due days saved');break;}
-   case 'backup':{const data={};COLS.forEach(c=>data[c]=S[c]);download(`DMB_Tracker_Backup_${today()}.json`,JSON.stringify({app:APP,saved:new Date().toISOString(),data},null,1),'application/json');break;}
+   case 'backup':{download(`DMB_Tracker_Backup_${today()}.json`,JSON.stringify(backupObj(),null,1),'application/json');markBackup();break;}
    case 'restoreFile':$('#fileIn').click();break;
-   case 'csv':exportCsv(el.dataset.k);break;
   }
 });
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('#modal').classList.contains('hidden'))closeForm()});
@@ -844,17 +1018,15 @@ document.addEventListener('change',e=>{
   const t=e.target;
   if(t.id==='dDate'&&t.value){U.dDate=t.value;render()}
   if(t.id==='obsArea'){U.obsArea=t.value;render()}
+  const tm={tFrom:'tFrom',tTo:'tTo',tWho:'tWho',tDesig:'tDesig',tCl:'tClient'};if(tm[t.id]&&t.value){U[tm[t.id]]=t.value;render()}
 });
 document.addEventListener('input',e=>{if(e.target.id==='obsQ'){U.obsQ=e.target.value;clearTimeout(U._q);U._q=setTimeout(()=>{render();const q=$('#obsQ');if(q){q.focus();q.setSelectionRange(q.value.length,q.value.length)}},250)}});
 $('#fileIn').addEventListener('change',e=>{
-  const f=e.target.files[0];if(!f)return;const r=new FileReader();
-  r.onload=()=>{let o;try{o=JSON.parse(r.result)}catch(x){toast('This is not a tracker backup file');return}
-    if(!o||o.app!==APP||!o.data){toast('This is not a DMB Work Tracker backup');return}
-    const n=COLS.reduce((s,c)=>s+Object.keys(o.data[c]||{}).length,0);
-    confirmSheet(`Restore ${n} records from the backup of ${esc(String(o.saved||'').slice(0,10))}? Records with the same ID will be replaced; newer records not in the backup stay as they are.`,'Restore',async()=>{
-      let k=0;for(const c of COLS)for(const [id,d] of Object.entries(o.data[c]||{})){const b={...d};delete b.id;try{await db.set(c,id,b);k++}catch(x){fail(x);return}}
-      toast(`${k} records restored`)});
-  };r.readAsText(f);e.target.value='';
+  const f=e.target.files[0];if(!f)return;e.target.value='';
+  if(/\.xlsx$/i.test(f.name)){const r=new FileReader();r.onload=async()=>{try{await loadXLSX()}catch(x){toast('Could not load the Excel tool. Check the internet.');return}
+      try{const wb=XLSX.read(r.result,{type:'array'});const ws=wb.Sheets['_restore'];if(!ws){toast('This Excel file has no restore data. Use an Excel backup from Settings.');return}
+        const rows=XLSX.utils.sheet_to_json(ws,{header:1});restoreFrom(JSON.parse(rows.slice(1).map(x=>x[0]||'').join('')))}catch(x){toast('Could not read this Excel backup')}};r.readAsArrayBuffer(f);return}
+  const r=new FileReader();r.onload=()=>{let o;try{o=JSON.parse(r.result)}catch(x){toast('This is not a tracker backup file');return}restoreFrom(o)};r.readAsText(f);
 });
 document.addEventListener('submit',async e=>{
   e.preventDefault();const f=e.target;
@@ -866,9 +1038,9 @@ document.addEventListener('submit',async e=>{
     return;
   }
   if(f.dataset.form==='tadd'){const title=$('#tTitle').value.trim();if(!title)return;
-    if(await save('tasks',null,{kind:'target',title,assignee:$('#tWho').value.trim(),date:U.dDate,done:false}))toast('Target added')}
+    if(await save('tasks',null,{kind:'target',title,client:$('#tClient').value,assignee:$('#tWho').value.trim(),date:U.dDate,done:false}))toast('Target added')}
   if(f.dataset.form==='ladd'){const work=$('#lWork').value.trim();if(!work)return;
-    if(await save('log',null,{date:U.dDate,work,name:me,place:$('#lPlace').value,hours:$('#lHrs').value===''?'':Number($('#lHrs').value)}))toast('Work logged')}
+    if(await save('log',null,{date:U.dDate,work,name:me,desig:desigOf(me)||myDesig,client:$('#lClient').value,place:$('#lPlace').value,hours:$('#lHrs').value===''?'':Number($('#lHrs').value)}))toast('Work logged')}
 });
 
 /* ================= SIGN-IN ================= */
@@ -876,20 +1048,25 @@ function waitSettings(ms){return new Promise(res=>{const t0=Date.now();(function
 async function gate(force){
   await waitSettings(5000);
   const pin=ST().pin;
-  if(!force&&me&&ls.get('dmbwt_pin')===pin)return;
+  if(!force&&me&&ls.get('dmbwt_pin')===pin&&(desigOf(me)||myDesig))return;
   document.querySelectorAll('.gate').forEach(g=>g.remove());
   const w=document.createElement('div');w.className='gate';
   w.innerHTML=`<form class="gatebox"><div class="mono" style="margin:0 auto">DMB</div><h2>DMB Work Tracker</h2><p>Enter your name and the team PIN</p>
     <div class="field"><label for="gName">Your name</label><input id="gName" class="inp" autocomplete="name" list="gPeople" value="${esc(me)}" required></div>
-    <datalist id="gPeople">${ST().team.map(p=>`<option value="${esc(p)}">`).join('')}</datalist>
+    <datalist id="gPeople">${ST().team.map(p=>`<option value="${esc(p.name)}">`).join('')}</datalist>
+    <div class="field"><label for="gDesig">Designation</label><select id="gDesig" class="inp" required><option value="">Choose…</option>${ST().desigs.map(d=>`<option ${(desigOf(me)||myDesig)===d?'selected':''}>${esc(d)}</option>`).join('')}</select></div>
     <div class="field"><label for="gPin">Team PIN</label><input id="gPin" class="inp" type="password" inputmode="numeric" autocomplete="off" required style="letter-spacing:4px"></div>
     <div id="gErr" class="small" style="color:var(--bad);min-height:18px"></div><button class="btn" style="justify-content:center">Open tracker</button></form>`;
   document.body.appendChild(w);setTimeout(()=>w.querySelector(me?'#gPin':'#gName').focus(),50);
   return new Promise(res=>w.querySelector('form').addEventListener('submit',ev=>{ev.preventDefault();
-    const n=w.querySelector('#gName').value.trim(),p=w.querySelector('#gPin').value.trim();
+    const n=w.querySelector('#gName').value.trim(),p=w.querySelector('#gPin').value.trim(),dg=w.querySelector('#gDesig').value;
     if(!n){w.querySelector('#gErr').textContent='Enter your name';return}
+    if(!dg){w.querySelector('#gErr').textContent='Choose your designation';return}
     if(p!==ST().pin){w.querySelector('#gErr').textContent='Wrong PIN';return}
-    me=n;ls.set('dmbwt_me',n);ls.set('dmbwt_pin',p);w.remove();render();res()}));
+    me=n;myDesig=dg;ls.set('dmbwt_me',n);ls.set('dmbwt_desig',dg);ls.set('dmbwt_pin',p);w.remove();
+    const team=ST().team;const i=team.findIndex(t=>t.name.toLowerCase()===n.toLowerCase());
+    if(i<0||team[i].desig!==dg){const t=clone(team);if(i<0)t.push({name:n,desig:dg});else t[i].desig=dg;save('settings','main',{...clone(S.settings.main||{}),team:t},i<0?`${n} joined as ${dg}`:'')}
+    render();res()}));
 }
 
 /* ================= BOOT ================= */
